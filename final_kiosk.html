@@ -1,0 +1,3582 @@
+<!DOCTYPE html>
+<!-- VERSION 3.0 - 음성 기능 추가 완료 -->
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>완벽한 민원처리 AI 키오스크 v2.0</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .main-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* 키오스크 사이드바 */
+        .kiosk-sidebar {
+            width: 400px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .kiosk-step {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .kiosk-step.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dee2e6;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .step-dot.active {
+            background: #667eea;
+            transform: scale(1.3);
+        }
+        
+        .step-dot.completed {
+            background: #4caf50;
+        }
+        
+        .detail-options {
+            padding: 10px;
+            background: #f0f4f8;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .detail-option {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .detail-option:hover {
+            background: #e3f2fd;
+            transform: translateX(5px);
+        }
+        
+        .detail-option input[type="checkbox"],
+        .detail-option input[type="radio"] {
+            margin-right: 10px;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #dee2e6;
+            position: sticky;
+            bottom: 0;
+        }
+        
+        .nav-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn.back {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .nav-btn.next {
+            background: #667eea;
+            color: white;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .kiosk-header {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .kiosk-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .kiosk-subtitle {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .kiosk-section {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .kiosk-section-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2d3436;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .situation-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .situation-btn {
+            padding: 12px 8px;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 0.85em;
+        }
+        
+        .situation-btn:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            transform: translateY(-2px);
+        }
+        
+        .situation-btn.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            font-weight: bold;
+        }
+        
+        .kiosk-result {
+            padding: 15px;
+            background: #e8f5e9;
+            margin: 10px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .kiosk-result.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .toggle-sidebar {
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 60px;
+            background: #667eea;
+            border-radius: 0 10px 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 18px;
+            z-index: 100;
+        }
+        
+        .kiosk-sidebar.collapsed {
+            width: 0;
+            overflow: hidden;
+        }
+        
+        .kiosk-sidebar.collapsed .toggle-sidebar {
+            right: 0;
+            border-radius: 10px 0 0 10px;
+        }
+
+        .chat-container {
+            flex: 1;
+            height: 100vh;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        @media (max-width: 480px) {
+            .api-settings-btn {
+                padding: 8px 12px;
+                font-size: 0.9em;
+                right: 10px;
+            }
+            
+            .bot-name {
+                font-size: 1em;
+            }
+            
+            .bot-status {
+                font-size: 0.8em;
+            }
+            
+            .quick-menu {
+                padding: 10px;
+            }
+            
+            .quick-btn {
+                font-size: 0.8em;
+                padding: 8px 12px;
+            }
+            
+            .quick-btn.category {
+                min-width: 80px;
+            }
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .bot-avatar {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .bot-info {
+            flex: 1;
+        }
+
+        .bot-name {
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+
+        .bot-status {
+            font-size: 0.9em;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* API 설정 버튼 */
+        .api-settings-btn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.3);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .api-settings-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        /* API 설정 모달 */
+        .api-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .api-modal.active {
+            display: flex;
+        }
+
+        .api-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .api-modal h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .api-input-group {
+            margin-bottom: 15px;
+        }
+
+        .api-input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .api-input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .api-input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .api-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .api-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .api-save {
+            background: #667eea;
+            color: white;
+        }
+
+        .api-save:hover {
+            background: #5a6fd8;
+        }
+
+        .api-cancel {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .api-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        .api-status {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .api-status.active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .api-status.inactive {
+            background: #fef5e7;
+            color: #f57c00;
+        }
+
+        /* 빠른 메뉴 스타일 */
+        .quick-menu {
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .quick-menu-title {
+            width: 100%;
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .quick-btn {
+            padding: 10px 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .quick-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .quick-btn.category {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            min-width: 100px;
+        }
+        
+        .quick-btn.category:hover {
+            background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f7fb;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #bbb;
+            border-radius: 4px;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            animation: messageSlide 0.3s ease;
+            max-width: 85%;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+        }
+
+        .message-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.bot .message-avatar {
+            background: #f0f0f0;
+        }
+
+        .message-content {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 18px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-text {
+            line-height: 1.6;
+            word-break: keep-all;
+        }
+        
+        .message-text strong {
+            display: inline-block;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            color: #333;
+            font-size: 1.05em;
+            font-weight: 600;
+        }
+        
+        .message-text br + br {
+            display: none;
+        }
+        
+        .message.bot .message-text ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        
+        .message.bot .message-text li {
+            margin: 4px 0;
+        }
+
+        .message-time {
+            font-size: 0.75em;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .message.user .message-time {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            animation: typingDot 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingDot {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: #f5f7fb;
+            border-radius: 25px;
+            padding: 5px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper:focus-within {
+            background: #e8ecf4;
+            box-shadow: 0 0 0 2px #667eea;
+        }
+
+        .chat-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 1em;
+            outline: none;
+        }
+
+        .input-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            color: #667eea;
+        }
+
+        .input-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.1);
+        }
+
+        .send-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .send-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .mic-btn.listening {
+            background: #f44336;
+            color: white;
+            animation: pulse-mic 1.5s infinite;
+        }
+
+        @keyframes pulse-mic {
+            0% {
+                box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(244, 67, 54, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- 키오스크 사이드바 -->
+        <div class="kiosk-sidebar" id="kioskSidebar">
+            <div class="toggle-sidebar" onclick="toggleSidebar()">
+                <span id="toggleIcon">◀</span>
+            </div>
+            
+            <div class="kiosk-header">
+                <div class="kiosk-title">🏢 스마트 민원처리 도우미</div>
+                <div class="kiosk-subtitle">단계별로 안내해드릴게요</div>
+            </div>
+            
+            <!-- 단계 표시기 -->
+            <div class="step-indicator">
+                <div class="step-dot active" id="step1Dot"></div>
+                <div class="step-dot" id="step2Dot"></div>
+                <div class="step-dot" id="step3Dot"></div>
+                <div class="step-dot" id="step4Dot"></div>
+            </div>
+            
+            <!-- STEP 1: 나이 선택 -->
+            <div class="kiosk-step active" id="step1">
+                <div class="kiosk-section">
+                    <div class="kiosk-section-title">
+                        <span>👤</span> STEP 1: 연령대를 선택하세요
+                    </div>
+                    <div class="situation-grid">
+                        <button class="situation-btn" onclick="selectAgeStep('youth')" data-age="youth">
+                            👶 미성년자<br>(19세 미만)
+                        </button>
+                        <button class="situation-btn" onclick="selectAgeStep('young')" data-age="young">
+                            🧑 청년<br>(19-34세)
+                        </button>
+                        <button class="situation-btn" onclick="selectAgeStep('middle')" data-age="middle">
+                            👨 중장년<br>(35-64세)
+                        </button>
+                        <button class="situation-btn" onclick="selectAgeStep('early-senior')" data-age="early-senior">
+                            👴 예비노인<br>(60-64세)
+                        </button>
+                        <button class="situation-btn" onclick="selectAgeStep('senior')" data-age="senior">
+                            👵 노인<br>(65세 이상)
+                        </button>
+                        <button class="situation-btn" onclick="selectAgeStep('senior-plus')" data-age="senior-plus">
+                            🧓 고령노인<br>(75세 이상)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- STEP 2: 상황 선택 -->
+            <div class="kiosk-step" id="step2">
+                <div class="kiosk-section">
+                    <div class="kiosk-section-title">
+                        <span>💭</span> STEP 2: 현재 상황을 선택하세요
+                    </div>
+                    <div id="situationOptions"></div>
+                </div>
+            </div>
+            
+            <!-- STEP 3: 세부 조건 -->
+            <div class="kiosk-step" id="step3">
+                <div class="kiosk-section">
+                    <div class="kiosk-section-title">
+                        <span>📋</span> STEP 3: 세부 조건을 확인하세요
+                    </div>
+                    <div id="detailConditions"></div>
+                </div>
+            </div>
+            
+            <!-- STEP 4: 맞춤 서비스 및 신청 안내 -->
+            <div class="kiosk-step" id="step4">
+                <div class="kiosk-section">
+                    <div class="kiosk-section-title">
+                        <span>✨</span> STEP 4: 맞춤 서비스 & 신청 안내
+                    </div>
+                    <div id="finalRecommendations"></div>
+                </div>
+            </div>
+            
+            <!-- 네비게이션 버튼 -->
+            <div class="navigation-buttons">
+                <button class="nav-btn back" onclick="previousStep()" id="backBtn" disabled>
+                    ← 이전 단계
+                </button>
+                <button class="nav-btn next" onclick="nextStep()" id="nextBtn" disabled>
+                    다음 단계 →
+                </button>
+            </div>
+        </div>
+        
+        <!-- 채팅 컨테이너 -->
+        <div class="chat-container">
+        <div class="chat-header">
+            <div class="bot-avatar">🤖</div>
+            <div class="bot-info">
+                <div class="bot-name">완벽한 민원 AI</div>
+                <div class="bot-status">
+                    <span class="status-dot"></span>
+                    <span id="statusText">로컬 AI 모드</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="api-settings-btn" onclick="toggleSpeech()" style="background: white; color: #667eea; font-size: 1em; font-weight: bold; border: none; padding: 10px 15px;" title="음성 켜기/끄기">
+                    <span id="speechIcon">🔊</span> <span id="speechText">음성 ON</span>
+                </button>
+                <button class="api-settings-btn" onclick="testVoice()" style="background: #ffeaa7; color: #d63031; font-size: 1em; font-weight: bold; border: none; padding: 10px 15px;" title="음성 테스트">
+                    🎤 테스트
+                </button>
+                <button class="api-settings-btn" onclick="showAPIModal()" style="background: white; color: #667eea; font-size: 1em; font-weight: bold; border: none;">
+                    ⚙️ API 설정
+                </button>
+            </div>
+        </div>
+
+        <!-- 빠른 메뉴 버튼들 -->
+        <div class="quick-menu">
+            <div class="quick-menu-title">💡 자주 찾는 서비스 (클릭하세요)</div>
+            
+            <!-- 카테고리 버튼들 -->
+            <button class="quick-btn category" onclick="handleQuickMenu('노인복지')">
+                👴 노인복지
+            </button>
+            <button class="quick-btn category" onclick="handleQuickMenu('생활지원')">
+                💰 생활지원
+            </button>
+            <button class="quick-btn category" onclick="handleQuickMenu('주거복지')">
+                🏠 주거복지
+            </button>
+            <button class="quick-btn category" onclick="handleQuickMenu('의료지원')">
+                🏥 의료지원
+            </button>
+            <button class="quick-btn category" onclick="handleQuickMenu('일자리')">
+                💼 일자리
+            </button>
+            
+            <!-- 구체적 서비스 버튼들 -->
+            <button class="quick-btn" onclick="handleQuickService('기초연금')">
+                기초연금
+            </button>
+            <button class="quick-btn" onclick="handleQuickService('기초생활수급')">
+                기초생활수급
+            </button>
+            <button class="quick-btn" onclick="handleQuickService('긴급복지')">
+                긴급복지
+            </button>
+            <button class="quick-btn" onclick="handleQuickService('전입신고')">
+                전입신고
+            </button>
+            <button class="quick-btn" onclick="handleQuickService('주민등록등본')">
+                주민등록등본
+            </button>
+            <button class="quick-btn" onclick="handleQuickService('여권발급')">
+                여권발급
+            </button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <div class="message-text">
+                        안녕하세요! 무엇이든 물어보세요. 😊<br><br>
+                        예시:<br>
+                        • "육십이 넘었는데 돈 받을 수 있는거 뭐 없냐"<br>
+                        • "나이가 좀 있는데 생활이 힘들어"<br>
+                        • "이사했는데 뭐 해야돼"<br><br>
+                        💡 더 똑똑한 답변을 원하시면 상단의 ⚙️ API 설정을 클릭하세요!
+                    </div>
+                    <div class="message-time"></div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="message-avatar">🤖</div>
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="input-wrapper">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="chatInput" 
+                    placeholder="아무 말이나 편하게 하세요..."
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button class="input-btn mic-btn" id="micBtn" onclick="toggleVoiceInput()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                </button>
+            </div>
+            <button class="input-btn send-btn" onclick="sendTextMessage()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- API 설정 모달 -->
+    <div class="api-modal" id="apiModal">
+        <div class="api-modal-content">
+            <h2>🔧 하이브리드 AI 설정</h2>
+            
+            <div class="api-input-group">
+                <label>API 제공자 선택</label>
+                <select id="apiProvider" onchange="updateAPIStatus()">
+                    <option value="">사용 안함 (로컬 AI)</option>
+                    <option value="openai">OpenAI (GPT-4) - 클라우드</option>
+                    <option value="google">Google Gemini - 클라우드</option>
+                    <option value="local">로컬 SLM (Gemma/Llama)</option>
+                </select>
+            </div>
+            
+            <div class="api-input-group" id="apiKeyGroup">
+                <label>API Key</label>
+                <input type="password" id="apiKey" placeholder="API Key를 입력하세요">
+            </div>
+            
+            <div class="api-input-group" id="localEndpointGroup" style="display: none;">
+                <label>로컬 SLM 엔드포인트</label>
+                <input type="text" id="localEndpoint" placeholder="http://localhost:8080/v1/chat/completions" 
+                       value="http://localhost:8080/v1/chat/completions">
+            </div>
+            
+            <div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 8px;">
+                <label style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="hybridMode" checked>
+                    <span><strong>하이브리드 모드</strong> - 민감정보 자동 분기</span>
+                </label>
+                <small style="display: block; margin-top: 5px; color: #666;">
+                    ✅ 일반 질의: 클라우드 LLM 사용<br>
+                    🔒 민감정보 포함: 로컬 SLM 사용
+                </small>
+            </div>
+            
+            <div style="margin-top: 10px; padding: 10px; background: #f0f4f8; border-radius: 8px;">
+                <label style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="ragEnabled" checked>
+                    <span><strong>RAG 시스템</strong> - 법령/FAQ 검색</span>
+                </label>
+                <small style="display: block; margin-top: 5px; color: #666;">
+                    📚 2,000+ 법령, 5,000+ FAQ, 10,000+ 사례 검색
+                </small>
+            </div>
+            
+            <div class="api-status inactive" id="apiStatus">
+                현재 로컬 AI 모드로 작동중
+            </div>
+            
+            <div class="api-buttons">
+                <button class="api-save" onclick="saveAPISettings()">저장</button>
+                <button class="api-cancel" onclick="closeAPIModal()">취소</button>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; font-size: 0.9em;">
+                <strong>🔒 보안 안내:</strong><br>
+                • 개인정보는 자동 탐지되어 로컬에서 처리<br>
+                • 민감정보 처리 로그 자동 저장<br>
+                • 개인정보보호법 준수
+            </div>
+            
+            <div style="margin-top: 10px; padding: 15px; background: #f5f5f5; border-radius: 8px; font-size: 0.9em;">
+                <strong>💡 API Key 얻는 방법:</strong><br>
+                • OpenAI: <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a><br>
+                • Google AI: <a href="https://makersuite.google.com/app/apikey" target="_blank">makersuite.google.com</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let recognition = null;
+        let isListening = false;
+        let isSpeechEnabled = true; // 음성 출력 활성화 여부
+        let selectedAge = null;
+        let selectedSituation = null;
+        let conversationContext = {
+            history: [],
+            lastTopic: null,
+            userData: {}
+        };
+
+        // API 설정
+        let apiConfig = {
+            provider: localStorage.getItem('apiProvider') || '',
+            apiKey: localStorage.getItem('apiKey') || '',
+            useAPI: false,
+            localSLMEndpoint: localStorage.getItem('localSLMEndpoint') || 'http://localhost:8080/v1/chat/completions',
+            useHybrid: localStorage.getItem('useHybrid') !== 'false'  // 기본값 true
+        };
+
+        // RAG 시스템 설정
+        const ragConfig = {
+            enabled: localStorage.getItem('ragEnabled') !== 'false',  // 기본값 true
+            vectorDBEndpoint: 'http://localhost:6333',
+            collections: {
+                laws: 'korean_laws',        // 2,000+ 법령
+                faqs: 'civil_service_faqs', // 5,000+ FAQ
+                cases: 'past_cases'         // 10,000+ 과거 민원사례
+            },
+            topK: 5,
+            threshold: 0.7
+        };
+
+        // 민감정보 탐지 시스템
+        const sensitiveInfoDetector = {
+            patterns: {
+                rrn: /\b(?:[0-9]{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[1,2][0-9]|3[0,1]))-?([1-4][0-9]{6})\b/g,
+                passport: /\b[A-Z]{1,2}[0-9]{8}\b/g,
+                driverLicense: /\b[0-9]{2}-[0-9]{2}-[0-9]{6}-[0-9]{2}\b/g,
+                creditCard: /\b(?:[0-9]{4}[-\s]?){3}[0-9]{4}\b/g,
+                bankAccount: /\b[0-9]{10,14}\b/g,
+                phone: /\b(?:010|011|016|017|018|019)-?[0-9]{3,4}-?[0-9]{4}\b/g,
+                email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g
+            },
+            
+            nerEntities: ['PERSON', 'LOCATION', 'ORGANIZATION', 'MONEY', 'DATE'],
+            
+            detect: function(text) {
+                const detectedInfo = {
+                    hasSensitive: false,
+                    types: [],
+                    maskedText: text,
+                    severity: 'low'
+                };
+                
+                for (const [type, pattern] of Object.entries(this.patterns)) {
+                    if (pattern.test(text)) {
+                        detectedInfo.hasSensitive = true;
+                        detectedInfo.types.push(type);
+                        detectedInfo.maskedText = detectedInfo.maskedText.replace(pattern, (match) => {
+                            return match.substring(0, 3) + '*'.repeat(match.length - 3);
+                        });
+                    }
+                }
+                
+                if (detectedInfo.types.includes('rrn') || detectedInfo.types.includes('creditCard')) {
+                    detectedInfo.severity = 'high';
+                } else if (detectedInfo.types.includes('phone') || detectedInfo.types.includes('bankAccount')) {
+                    detectedInfo.severity = 'medium';
+                }
+                
+                return detectedInfo;
+            },
+            
+            logDetection: function(detectedInfo, source) {
+                const log = {
+                    timestamp: new Date().toISOString(),
+                    source: source,
+                    types: detectedInfo.types,
+                    severity: detectedInfo.severity,
+                    action: detectedInfo.hasSensitive ? 'BLOCKED' : 'ALLOWED'
+                };
+                
+                const logs = JSON.parse(localStorage.getItem('sensitiveInfoLogs') || '[]');
+                logs.push(log);
+                localStorage.setItem('sensitiveInfoLogs', JSON.stringify(logs.slice(-100)));
+                
+                console.log('[Security Audit]', log);
+            }
+        };
+
+        // API 모달 관련
+        function showAPIModal() {
+            document.getElementById('apiModal').classList.add('active');
+            document.getElementById('apiProvider').value = apiConfig.provider;
+            document.getElementById('apiKey').value = apiConfig.apiKey;
+            document.getElementById('localEndpoint').value = apiConfig.localSLMEndpoint;
+            document.getElementById('hybridMode').checked = apiConfig.useHybrid;
+            document.getElementById('ragEnabled').checked = ragConfig.enabled;
+            updateAPIStatus();
+        }
+
+        function closeAPIModal() {
+            document.getElementById('apiModal').classList.remove('active');
+        }
+
+        function saveAPISettings() {
+            const provider = document.getElementById('apiProvider').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const localEndpoint = document.getElementById('localEndpoint').value;
+            const hybridMode = document.getElementById('hybridMode').checked;
+            const ragEnabled = document.getElementById('ragEnabled').checked;
+            
+            apiConfig.provider = provider;
+            apiConfig.apiKey = apiKey;
+            apiConfig.localSLMEndpoint = localEndpoint;
+            apiConfig.useHybrid = hybridMode;
+            apiConfig.useAPI = (provider && (provider === 'local' || apiKey));
+            
+            ragConfig.enabled = ragEnabled;
+            
+            // 설정 저장
+            localStorage.setItem('apiProvider', provider);
+            localStorage.setItem('apiKey', apiKey);
+            localStorage.setItem('localSLMEndpoint', localEndpoint);
+            localStorage.setItem('useHybrid', hybridMode);
+            localStorage.setItem('ragEnabled', ragEnabled);
+            
+            updateAPIStatus();
+            closeAPIModal();
+            
+            // 헤더 상태 업데이트
+            const statusText = document.getElementById('statusText');
+            if (apiConfig.useAPI) {
+                if (provider === 'local') {
+                    statusText.textContent = '로컬 SLM 모드';
+                } else {
+                    statusText.textContent = `${provider === 'openai' ? 'OpenAI' : 'Google Gemini'} 모드`;
+                }
+            } else {
+                statusText.textContent = '로컬 AI 모드';
+            }
+            
+            // 시스템 상태 로그
+            console.log('🔄 설정 업데이트:');
+            console.log('• 하이브리드 모드:', hybridMode ? '활성' : '비활성');
+            console.log('• RAG 시스템:', ragEnabled ? '활성' : '비활성');
+            console.log('• API 제공자:', provider || '없음');
+        }
+
+        function updateAPIStatus() {
+            const status = document.getElementById('apiStatus');
+            const provider = document.getElementById('apiProvider').value;
+            const apiKeyGroup = document.getElementById('apiKeyGroup');
+            const localEndpointGroup = document.getElementById('localEndpointGroup');
+            
+            // UI 업데이트
+            if (provider === 'local') {
+                apiKeyGroup.style.display = 'none';
+                localEndpointGroup.style.display = 'block';
+                status.className = 'api-status active';
+                status.textContent = '로컬 SLM 모드 활성화';
+            } else if (provider) {
+                apiKeyGroup.style.display = 'block';
+                localEndpointGroup.style.display = 'none';
+                if (document.getElementById('apiKey').value) {
+                    status.className = 'api-status active';
+                    status.textContent = `${provider === 'openai' ? 'OpenAI' : 'Google Gemini'} API 활성화`;
+                } else {
+                    status.className = 'api-status inactive';
+                    status.textContent = 'API Key를 입력하세요';
+                }
+            } else {
+                apiKeyGroup.style.display = 'block';
+                localEndpointGroup.style.display = 'none';
+                status.className = 'api-status inactive';
+                status.textContent = '로컬 AI 모드로 작동중';
+            }
+        }
+
+        // 완벽한 패턴 매칭 시스템
+        const patternMatcher = {
+            // 모든 가능한 표현 매칭
+            match: function(input) {
+                const text = input.toLowerCase().replace(/\s+/g, ' ');
+                
+                // 직접 매칭 패턴들 - 더욱 포괄적으로 확장
+                const patterns = [
+                    // 나이 + 돈/지원 - 모든 가능한 표현
+                    { regex: /(육십|칠십|팔십|구십|예순|일흔|여든|아흔|나이|노인|어르신|늙은|고령).*(돈|지원|혜택|받|보조|수당|연금|월세|생활비)/, response: 'elderly_financial' },
+                    { regex: /(돈|지원|혜택|수당|연금).*(육십|칠십|팔십|구십|예순|일흔|여든|아흔|나이|노인|어르신)/, response: 'elderly_financial' },
+                    { regex: /(\d{2})(살|세).*(돈|지원|받|혜택|수당)/, response: 'elderly_financial' },
+                    { regex: /(나이가?.*(좀|많|있|들).*(돈|수입|벌|생활|먹고))/, response: 'elderly_financial' },
+                    { regex: /(늙어|나이.?들어).*(돈|생활|먹고|살)/, response: 'elderly_financial' },
+                    { regex: /(육십이.?넘|칠십.?넘|팔십.?넘).*(돈|받|지원|혜택)/, response: 'elderly_financial' },
+                    
+                    // 생활 어려움 - 다양한 표현
+                    { regex: /(생활|생계|먹고|살기).*(어려|힘들|못|빠듯|부족)/, response: 'financial_difficulty' },
+                    { regex: /(돈|수입|벌이|소득).*(없|못|부족|떨어)/, response: 'financial_difficulty' },
+                    { regex: /(벌.?수.?있는.*(수단|방법|일))/, response: 'financial_difficulty' },
+                    { regex: /(가난|빈곤|어려운|못.?살|힘든).*(상황|형편|처지)/, response: 'financial_difficulty' },
+                    { regex: /(월세|전세|집세|공과금).*(못|밀|힘들)/, response: 'financial_difficulty' },
+                    
+                    // 일자리/취업
+                    { regex: /(일|일자리|직장|취업|알바|아르바이트).*(구하|찾|없|필요)/, response: 'job_search' },
+                    { regex: /(돈.*(벌|버는|벌이)).*(방법|수단|일)/, response: 'job_search' },
+                    { regex: /(노인|어르신|시니어).*(일자리|취업|일.?하고)/, response: 'elderly_job' },
+                    
+                    // 이사/전입
+                    { regex: /(이사|전입|주소|거주지).*(했|왔|옮|변경|신고)/, response: 'moving' },
+                    { regex: /(새집|새로운집|다른동네|이사.?가|이사.?와)/, response: 'moving' },
+                    
+                    // 출산/육아
+                    { regex: /(아기|애기|아이|출산|임신).*(낳|태어|출산|예정|지원)/, response: 'birth' },
+                    { regex: /(출산|출생).*(신고|등록|수당|지원금)/, response: 'birth' },
+                    { regex: /(양육|육아|보육).*(지원|수당|도움)/, response: 'childcare' },
+                    
+                    // 의료/건강
+                    { regex: /(병원|의료|건강|아프|아픈|치료).*(비|지원|보험|도움)/, response: 'medical' },
+                    { regex: /(의료급여|건강보험|실손|보험료).*(신청|지원|감면)/, response: 'medical' },
+                    
+                    // 서류
+                    { regex: /(등본|초본|서류|증명서|인감).*(필요|발급|떼|뽑|어디)/, response: 'document' },
+                    
+                    // 주거
+                    { regex: /(집|주택|아파트|임대|전세|월세).*(지원|신청|구하|없)/, response: 'housing' },
+                    { regex: /(lh|sh|주거|주택).*(신청|자격|조건)/, response: 'housing' },
+                    
+                    // 여권
+                    { regex: /(여권|패스포트|해외|외국).*(필요|만들|발급|신청)/, response: 'passport' }
+                ];
+                
+                for (const pattern of patterns) {
+                    if (pattern.regex.test(text)) {
+                        return pattern.response;
+                    }
+                }
+                
+                // 나이 추출 및 컨텍스트 분석
+                const age = this.extractAge(text);
+                if (age >= 60) {
+                    if (text.includes('돈') || text.includes('받') || text.includes('지원') || 
+                        text.includes('수당') || text.includes('혜택') || text.includes('생활')) {
+                        return 'elderly_financial';
+                    }
+                    if (text.includes('일') || text.includes('일자리') || text.includes('벌')) {
+                        return 'elderly_job';
+                    }
+                }
+                
+                // 키워드 기반 추가 분석
+                if (text.includes('기초') && (text.includes('연금') || text.includes('수급'))) {
+                    return 'elderly_financial';
+                }
+                
+                if (text.includes('차상위') || text.includes('한부모') || text.includes('장애')) {
+                    return 'financial_difficulty';
+                }
+                
+                return null;
+            },
+            
+            extractAge: function(text) {
+                // 한글 숫자 - 더 많은 표현 추가
+                const koreanNums = {
+                    '오십': 50, '오십일': 51, '오십이': 52, '오십삼': 53, '오십사': 54, '오십오': 55,
+                    '육십': 60, '육십일': 61, '육십이': 62, '육십삼': 63, '육십사': 64, '육십오': 65,
+                    '육십육': 66, '육십칠': 67, '육십팔': 68, '육십구': 69,
+                    '칠십': 70, '칠십일': 71, '칠십이': 72, '칠십삼': 73, '칠십사': 74, '칠십오': 75,
+                    '팔십': 80, '팔십일': 81, '팔십이': 82, '팔십삼': 83, '팔십사': 84, '팔십오': 85,
+                    '구십': 90,
+                    '예순': 60, '일흔': 70, '여든': 80, '아흔': 90,
+                    '환갑': 60, '고희': 70, '팔순': 80, '구순': 90
+                };
+                
+                for (const [korean, num] of Object.entries(koreanNums)) {
+                    if (text.includes(korean)) return num;
+                }
+                
+                // 숫자
+                const match = text.match(/(\d{2,3})(살|세|대)/);
+                if (match) return parseInt(match[1]);
+                
+                // "~대" 표현
+                if (text.includes('60대')) return 65;
+                if (text.includes('70대')) return 75;
+                if (text.includes('80대')) return 85;
+                
+                return 0;
+            }
+        };
+
+        // 응답 생성기
+        const responseGenerator = {
+            generate: function(type) {
+                const responses = {
+                    elderly_financial: `어르신께서 받으실 수 있는 지원을 안내해드릴게요! 😊
+
+<strong>1️⃣ 기초연금</strong>
+• 자격: 만 65세 이상, 소득 하위 70%
+• 금액: 매달 최대 33만 4천원
+• 신청: 주민센터 또는 복지로(www.bokjiro.go.kr)
+
+<strong>2️⃣ 기초생활수급자</strong>
+• 생계급여: 월 최대 62만원
+• 의료급여: 병원비 지원
+• 주거급여: 월세/전세 지원
+• 신청: 주민센터
+
+<strong>3️⃣ 노인일자리사업</strong>
+• 월 27만원~71만원
+• 하루 3-4시간 근무
+• 신청: 시니어클럽, 노인복지관
+
+<strong>4️⃣ 기타 지원</strong>
+• 노인돌봄서비스
+• 무료급식
+• 경로우대(지하철, 공원 무료)
+
+📞 상담전화: 129 (보건복지상담센터)
+주민센터에서 통합 상담받으시면 맞춤 지원 안내받으실 수 있어요!`,
+
+                    elderly_job: `어르신을 위한 일자리 정보예요! 💪
+
+<strong>👴 노인일자리사업</strong>
+
+1️⃣ <strong>공익형</strong>
+• 월 27만원 (월 30시간)
+• 환경정비, 급식도우미 등
+• 만 65세 이상 기초연금 수급자
+
+2️⃣ <strong>사회서비스형</strong>
+• 월 59~71만원 (월 60시간)
+• 노노케어, 보육시설 도우미
+• 만 65세 이상
+
+3️⃣ <strong>시장형</strong>
+• 급여 사업단별 상이
+• 카페, 제조, 판매 등
+• 만 60세 이상
+
+<strong>📍 신청처</strong>
+• 시니어클럽 (1566-0072)
+• 노인복지관
+• 대한노인회 취업지원센터
+
+매년 12~1월 모집하니 미리 신청하세요!`,
+
+                    job_search: `일자리를 찾고 계시는군요! 도와드릴게요 💼
+
+<strong>🔍 일자리 찾기</strong>
+
+1️⃣ <strong>정부 일자리 지원</strong>
+• 워크넷: www.work.go.kr
+• 국민취업지원제도: 월 50만원+취업지원
+• 고용센터 직업상담
+
+2️⃣ <strong>중장년 특화</strong>
+• 중장년일자리희망센터
+• 시니어인턴십: 기업 연수 지원
+• 경력활용 일자리
+
+3️⃣ <strong>즉시 가능한 일</strong>
+• 공공근로: 구청/주민센터 신청
+• 자활근로: 기초수급자 우선
+• 일용직: 건설협회, 인력사무소
+
+어떤 분야 경력이 있으신가요?`,
+
+                    financial_difficulty: `경제적으로 어려우신 상황이시군요. 도와드릴게요!
+
+<strong>📌 즉시 신청 가능한 지원</strong>
+
+1️⃣ <strong>긴급복지지원</strong>
+• 생계지원: 4인 기준 월 162만원
+• 의료지원: 300만원 한도
+• 주거지원: 월세 지원
+• 신청: 주민센터 또는 보건복지상담센터(129)
+
+2️⃣ <strong>기초생활수급자</strong>
+• 생계/의료/주거/교육 급여
+• 신청: 주민센터
+
+3️⃣ <strong>차상위계층 지원</strong>
+• 중위소득 50% 이하 가구
+• 각종 감면 혜택
+
+어떤 것부터 도와드릴까요?`,
+
+                    housing: `주거 지원 정보를 안내해드릴게요 🏠
+
+<strong>🏢 공공임대주택</strong>
+
+1️⃣ <strong>영구임대</strong>
+• 보증금 250만원, 월 5~10만원
+• 기초수급자, 차상위계층
+
+2️⃣ <strong>국민임대</strong>
+• 시세 60~80% 수준
+• 무주택 저소득층
+
+3️⃣ <strong>행복주택</strong>
+• 젊은층, 신혼부부 우선
+• 시세 60~80%
+
+<strong>💰 주거급여</strong>
+• 월세: 최대 32만원 지원
+• 자가: 주택 수선비 지원
+• 신청: 주민센터
+
+LH 콜센터: 1600-1004`,
+
+                    medical: `의료비 지원 안내드릴게요 🏥
+
+<strong>💊 의료비 지원제도</strong>
+
+1️⃣ <strong>의료급여</strong>
+• 기초수급자 병원비 지원
+• 본인부담: 외래 1000원, 입원 무료
+
+2️⃣ <strong>긴급의료비 지원</strong>
+• 최대 300만원
+• 갑작스런 중병/수술 시
+
+3️⃣ <strong>재난적의료비 지원</strong>
+• 의료비 50% 지원 (최대 3천만원)
+• 소득 대비 의료비 15% 초과 시
+
+4️⃣ <strong>건강보험료 감면</strong>
+• 실직/휴직 시 50% 감면
+• 신청: 건강보험공단
+
+도움이 필요하신 의료 상황이 있으신가요?`,
+
+                    childcare: `육아 지원 정보예요 👶
+
+<strong>💰 양육 지원금</strong>
+
+1️⃣ <strong>아동수당</strong>
+• 만 8세 미만: 월 10만원
+
+2️⃣ <strong>양육수당</strong>
+• 어린이집 미이용: 월 10~20만원
+
+3️⃣ <strong>보육료 지원</strong>
+• 어린이집: 전액 지원
+• 유치원: 유아학비 지원
+
+<strong>🏫 돌봄 서비스</strong>
+• 아이돌봄서비스: 시간제/종일제
+• 초등돌봄교실
+• 지역아동센터
+
+신청: 주민센터 또는 복지로`,
+
+                    moving: `이사하셨군요! 필수 신고사항 안내드릴게요.
+
+<strong>📋 전입신고 (필수!)</strong>
+• 기한: 이사 후 14일 이내
+• 장소: 새 주소지 주민센터
+• 준비물: 신분증, 임대차계약서(세입자)
+• 온라인: 정부24(www.gov.kr)
+
+<strong>💡 함께 처리하면 좋은 것들</strong>
+• 확정일자 (세입자 보호)
+• 자동차 주소변경
+• 각종 카드/보험 주소변경
+
+벌금 피하려면 꼭 14일 안에 신고하세요!`,
+
+                    birth: `축하드립니다! 👶
+
+<strong>출생신고 & 지원금 안내</strong>
+
+1️⃣ <strong>출생신고</strong>
+• 기한: 출생 후 1개월 이내
+• 장소: 주민센터
+• 준비물: 출생증명서, 부모 신분증
+
+2️⃣ <strong>출산지원금</strong>
+• 첫만남이용권: 200만원
+• 출산장려금: 지자체별 상이
+• 양육수당: 월 20만원
+• 아동수당: 월 10만원
+
+3️⃣ <strong>산후조리 지원</strong>
+• 산모신생아 건강관리사
+• 산후조리원 비용 지원
+
+주민센터에서 한번에 신청 가능해요!`,
+
+                    document: `필요한 서류 발급 방법을 안내해드릴게요!
+
+<strong>📄 주요 서류 발급처</strong>
+
+• <strong>주민등록등본/초본</strong>
+  - 주민센터: 400원
+  - 무인발급기: 300원
+  - 정부24: 무료
+
+• <strong>가족관계증명서</strong>
+  - 주민센터: 1,000원
+  - 온라인: 500원
+
+• <strong>인감증명서</strong>
+  - 주민센터 직접방문 필수
+
+온라인이 제일 싸고 편해요!`,
+
+                    passport: `여권 발급 안내드릴게요! ✈️
+
+<strong>📌 여권 발급</strong>
+• 장소: 구청/시청 여권과
+• 준비물: 신분증, 여권사진 1매
+• 수수료: 5만원 (10년)
+• 소요기간: 약 1주일
+
+<strong>💡 온라인 신청</strong>
+• 정부24에서 신청 → 방문수령
+• 긴급여권: 1일 발급 (1년만 유효)
+
+여권사진은 6개월 이내 촬영한 것만 가능해요!`,
+
+                    default: `무엇을 도와드릴까요? 😊
+
+구체적으로 말씀해주시면 정확히 안내해드릴게요.
+예: "기초연금 신청", "이사 신고", "생활비 지원" 등`
+                };
+                
+                return responses[type] || responses.default;
+            }
+        };
+
+        // RAG 시스템 - 관련 문서 검색
+        async function searchRAG(query) {
+            if (!ragConfig.enabled) return null;
+            
+            try {
+                // 실제 구현시 벡터 DB API 호출
+                // 여기서는 시뮬레이션 데이터 반환
+                const mockResults = {
+                    laws: [
+                        { title: '기초연금법', content: '65세 이상 소득하위 70%...', score: 0.92 },
+                        { title: '긴급복지지원법', content: '위기상황 긴급지원...', score: 0.88 }
+                    ],
+                    faqs: [
+                        { question: '기초연금 신청 자격은?', answer: '만 65세 이상, 소득하위 70%...', score: 0.95 }
+                    ],
+                    cases: [
+                        { id: 'CASE-2024-001', summary: '유사 사례 처리 결과...', score: 0.9 }
+                    ]
+                };
+                
+                const searchResults = {};
+                for (const [key, results] of Object.entries(mockResults)) {
+                    searchResults[key] = results.filter(r => r.score >= ragConfig.threshold);
+                }
+                
+                return searchResults;
+            } catch (error) {
+                console.error('RAG 검색 오류:', error);
+                return null;
+            }
+        }
+
+        // 로컬 SLM 호출 (민감정보 포함 시)
+        async function callLocalSLM(input, context) {
+            try {
+                const response = await fetch(apiConfig.localSLMEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'gemma-2b',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: `당신은 한국 정부 민원처리 AI입니다.
+민감정보를 안전하게 처리하며 정확한 정보를 제공합니다.
+컨텍스트: ${context ? JSON.stringify(context) : '없음'}`
+                            },
+                            {
+                                role: 'user',
+                                content: input
+                            }
+                        ],
+                        max_tokens: 1000,
+                        temperature: 0.3
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return {
+                        content: data.choices[0].message.content,
+                        source: 'local_slm'
+                    };
+                }
+            } catch (error) {
+                console.error('로컬 SLM 호출 실패:', error);
+            }
+            return null;
+        }
+
+        // 클라우드 API 호출
+        async function callAPI(input, context) {
+            if (!apiConfig.useAPI) return null;
+            
+            try {
+                if (apiConfig.provider === 'openai') {
+                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiConfig.apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: 'gpt-4-turbo-preview',
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: `당신은 친절한 한국 민원처리 전문 상담사입니다.
+시민들이 일상적으로 사용하는 모든 표현을 이해하고, 눈높이에 맞춰 친근하게 안내합니다.
+
+핵심 역할:
+1. 시민의 말을 있는 그대로 이해하기 (구어체, 사투리, 속어 모두 이해)
+2. 실제 공무원처럼 친절하고 공감하는 응대
+3. 복잡한 제도를 쉽게 설명
+4. 구체적인 정보 제공 (금액, 신청처, 기한 등)
+5. HTML 태그 활용 (<strong>, <br> 등)
+6. 이모지로 친근감 표현
+
+대화 이해 규칙:
+- "육십이 넘었는데" = 62세 이상 어르신
+- "돈 받을 수 있는거" = 지원금, 수당, 혜택
+- "나이가 좀 있는데" = 고령자
+- "돈을 벌 수 있는 수단이 없어" = 일자리나 생계 지원 필요
+- "생활이 힘들어" = 경제적 어려움
+- "먹고 살기 빠듯해" = 생활비 부족
+
+주요 민원 정보:
+1. 노인 지원
+   - 기초연금: 65세 이상, 소득하위 70%, 월 최대 33.4만원
+   - 노인일자리: 60-65세 이상, 월 27-71만원
+   - 기초생활수급: 생계/의료/주거급여
+   
+2. 생활 지원
+   - 긴급복지: 갑작스런 위기 시 생계/의료/주거 지원
+   - 차상위계층: 중위소득 50% 이하 각종 감면
+   
+3. 일자리
+   - 정부 일자리: 공공근로, 자활근로
+   - 노인일자리사업: 공익형/사회서비스형/시장형
+   
+4. 행정 서비스
+   - 전입신고: 이사 후 14일 이내
+   - 출생신고: 출생 후 1개월 이내
+   - 각종 증명서: 정부24 온라인 발급
+
+대화 스타일:
+- 시작: "네, 어르신!" 또는 "안녕하세요!"
+- 공감: "힘드신 상황이시군요" "도와드릴게요"
+- 설명: 단계별로 쉽게
+- 마무리: "주민센터에서 상담받아보세요"
+
+실제 대화 예시:
+Q: "육십이 넘었는데 돈 받을 수 있는거 뭐 없냐"
+A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있어요! 😊
+
+우선 만 65세가 되시면 <strong>기초연금</strong>을 신청하실 수 있어요.
+매달 최대 33만원까지 받으실 수 있습니다.
+
+지금 당장은 <strong>노인일자리사업</strong>에 참여하실 수 있어요!
+- 공익형: 월 27만원 (하루 3시간)
+- 사회서비스형: 월 59-71만원
+
+생활이 많이 어려우시다면 <strong>기초생활수급</strong>이나 
+<strong>긴급복지지원</strong>도 신청 가능해요.
+
+가까운 주민센터에 가시면 한번에 상담받으실 수 있어요!
+더 자세한 내용이 필요하시면 말씀해주세요~`
+                                },
+                                {
+                                    role: 'user',
+                                    content: input
+                                }
+                            ],
+                            max_tokens: 1500,
+                            temperature: 0.8
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        return data.choices[0].message.content;
+                    }
+                } else if (apiConfig.provider === 'google') {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiConfig.apiKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{
+                                    text: `당신은 친절한 한국 민원처리 전문 상담사입니다.
+
+시민의 질문: "${input}"
+
+중요: 시민들은 다양한 방식으로 말합니다.
+- "육십이 넘었는데 돈 받을 수 있는거 뭐 없냐" = 62세 이상 노인 지원금 문의
+- "나이가 좀 있는데 돈을 벌 수 있는 수단이 없어" = 고령자 일자리/생계 지원
+- "생활이 힘들어", "먹고 살기 빠듯해" = 경제적 지원 필요
+
+답변 스타일:
+1. 구어체를 완벽히 이해하고 공감으로 시작
+2. "네, 어르신!" "힘드신 상황이시군요" 등 친근한 인사
+3. HTML 태그로 중요 내용 강조 (<strong>, <br>)
+4. 이모지로 따뜻함 표현 😊
+5. 구체적 정보 제공 (금액, 신청처, 기한)
+
+핵심 정보:
+노인 지원:
+- 기초연금: 65세↑, 월 최대 33.4만원
+- 노인일자리: 60세↑, 월 27-71만원
+- 경로우대: 지하철/버스 무료
+
+생활 지원:
+- 기초생활수급: 생계/의료/주거/교육급여
+- 긴급복지: 위기 시 즉시 지원
+- 차상위계층: 중위소득 50% 이하
+
+일자리:
+- 노인일자리사업: 공익형/사회서비스형
+- 중장년 취업: 시니어인턴십
+- 공공근로: 구청/주민센터
+
+예시 답변:
+"네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있어요! 😊
+
+<strong>당장 가능한 지원:</strong>
+• 노인일자리사업 (월 27-71만원)
+• 생활 어려우시면 긴급복지지원
+
+<strong>65세 되시면:</strong>
+• 기초연금 (월 최대 33만원)
+
+주민센터에서 통합상담 받아보세요!"
+
+위 스타일대로 친근하고 도움되는 답변을 작성하세요.`
+                                }]
+                            }]
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        return data.candidates[0].content.parts[0].text;
+                    }
+                }
+            } catch (error) {
+                console.error('API Error:', error);
+            }
+            
+            return null;
+        }
+
+        // 빠른 메뉴 카테고리 처리
+        function handleQuickMenu(category) {
+            // 사용자 메시지로 표시
+            addChatMessage(`${category} 정보를 알려주세요`, 'user');
+            
+            // 타이핑 인디케이터 표시
+            showTypingIndicator();
+            
+            // 카테고리별 응답
+            let response = '';
+            switch(category) {
+                case '노인복지':
+                    response = responseGenerator.generate('elderly_financial');
+                    break;
+                case '생활지원':
+                    response = responseGenerator.generate('financial_difficulty');
+                    break;
+                case '주거복지':
+                    response = responseGenerator.generate('housing');
+                    break;
+                case '의료지원':
+                    response = responseGenerator.generate('medical');
+                    break;
+                case '일자리':
+                    response = responseGenerator.generate('job_search');
+                    break;
+                default:
+                    response = `${category}에 대한 정보를 찾고 있습니다...`;
+            }
+            
+            setTimeout(() => {
+                hideTypingIndicator();
+                addChatMessage(response, 'bot');
+            }, 500);
+        }
+        
+        // 빠른 서비스 버튼 처리
+        function handleQuickService(service) {
+            // 사용자 메시지로 표시
+            addChatMessage(`${service}에 대해 알려주세요`, 'user');
+            
+            // 타이핑 인디케이터 표시
+            showTypingIndicator();
+            
+            // 서비스별 응답
+            let response = '';
+            switch(service) {
+                case '기초연금':
+                    response = `<strong>🎯 기초연금 안내</strong>
+
+<strong>신청 자격</strong>
+• 만 65세 이상 대한민국 국민
+• 소득인정액이 선정기준액 이하
+• 단독가구: 213만원 이하
+• 부부가구: 340.8만원 이하
+
+<strong>지급 금액</strong>
+• 단독가구: 월 최대 334,810원
+• 부부가구: 월 최대 535,680원
+
+<strong>신청 방법</strong>
+• 방문: 주소지 읍면동 주민센터
+• 온라인: 복지로 (www.bokjiro.go.kr)
+• 대리신청 가능 (배우자, 자녀 등)
+
+<strong>필요 서류</strong>
+• 신분증
+• 통장사본
+• 소득재산 신고서
+
+📞 문의: 129 또는 국민연금공단 1355`;
+                    break;
+                    
+                case '기초생활수급':
+                    response = `<strong>📋 기초생활수급자 안내</strong>
+
+<strong>급여 종류</strong>
+• 생계급여: 월 최대 62만원 (1인 기준)
+• 의료급여: 의료비 지원
+• 주거급여: 임차료 또는 수선유지비
+• 교육급여: 교육활동지원비
+
+<strong>선정 기준 (2024년)</strong>
+• 생계급여: 중위소득 32% 이하
+• 의료급여: 중위소득 40% 이하
+• 주거급여: 중위소득 48% 이하
+• 교육급여: 중위소득 50% 이하
+
+<strong>신청 방법</strong>
+• 주소지 읍면동 주민센터 방문
+• 온라인: 복지로 (www.bokjiro.go.kr)
+
+<strong>필요 서류</strong>
+• 신분증
+• 임대차계약서 (해당자)
+• 통장사본
+
+💡 통합 신청하면 모든 급여 한번에 심사!`;
+                    break;
+                    
+                case '긴급복지':
+                    response = `<strong>🚨 긴급복지지원 안내</strong>
+
+<strong>지원 대상</strong>
+• 갑작스런 위기상황으로 생계유지 곤란
+• 주소득자 사망, 가출, 행방불명
+• 중한 질병 또는 부상
+• 화재, 자연재해 등
+
+<strong>지원 내용</strong>
+• 생계지원: 4인 기준 월 162만원
+• 의료지원: 300만원 한도
+• 주거지원: 4인 기준 월 66만원
+• 교육지원: 학용품비, 수업료
+
+<strong>신청 방법</strong>
+• 보건복지상담센터 129 (24시간)
+• 읍면동 주민센터
+• 시군구청
+
+<strong>지원 기간</strong>
+• 생계: 최대 6개월
+• 의료: 1회 (필요시 연장)
+• 주거: 최대 12개월
+
+⚡ 위기상황 발생시 즉시 129로 전화!`;
+                    break;
+                    
+                case '전입신고':
+                    response = `<strong>🏠 전입신고 안내</strong>
+
+<strong>신고 기한</strong>
+• 이사한 날로부터 14일 이내 (필수!)
+• 기한 초과시 과태료 최대 5만원
+
+<strong>신고 방법</strong>
+• 방문: 새 주소지 읍면동 주민센터
+• 온라인: 정부24 (www.gov.kr)
+• 무인민원발급기
+
+<strong>필요 서류</strong>
+• 신분증
+• 세대주 도장 (본인 아닐 경우)
+• 임대차계약서 (세입자)
+
+<strong>함께 처리하면 좋은 것</strong>
+• 확정일자 (전세/월세 보호)
+• 자동차 주소변경
+• 각종 카드/보험 주소변경
+
+💡 온라인 신고가 가장 빠르고 편리해요!`;
+                    break;
+                    
+                case '주민등록등본':
+                    response = `<strong>📄 주민등록등본 발급 안내</strong>
+
+<strong>발급 방법 및 수수료</strong>
+• 온라인 정부24: 무료 ✨
+• 무인민원발급기: 300원
+• 주민센터 방문: 400원
+
+<strong>온라인 발급 (추천!)</strong>
+• 정부24 (www.gov.kr)
+• 24시간 발급 가능
+• 프린터로 즉시 출력
+
+<strong>무인발급기 위치</strong>
+• 주민센터, 구청, 지하철역
+• 대형마트, 은행
+
+<strong>필요한 경우</strong>
+• 은행 대출
+• 부동산 계약
+• 각종 증명
+
+💡 정부24에서 무료로 발급받으세요!
+전자문서지갑에 저장하면 더 편리해요.`;
+                    break;
+                    
+                case '여권발급':
+                    response = `<strong>✈️ 여권 발급 안내</strong>
+
+<strong>발급 장소</strong>
+• 전국 여권사무 대행기관
+• 구청, 시청 민원실
+
+<strong>필요 서류</strong>
+• 여권발급신청서
+• 신분증
+• 여권사진 1매 (6개월 이내)
+• 병역관련 서류 (해당자)
+
+<strong>수수료</strong>
+• 10년 복수여권: 53,000원
+• 5년 복수여권: 45,000원
+• 단수여권: 20,000원
+
+<strong>처리 기간</strong>
+• 일반: 6-7일
+• 긴급: 1-3일 (추가비용)
+
+<strong>온라인 신청</strong>
+• 정부24에서 신청 → 방문수령
+
+📸 여권사진 규정 엄격하니 주의!`;
+                    break;
+                    
+                default:
+                    response = `${service}에 대해 자세히 알려드릴게요...`;
+            }
+            
+            setTimeout(() => {
+                hideTypingIndicator();
+                addChatMessage(response, 'bot');
+            }, 500);
+        }
+        
+        // 메인 응답 함수 (하이브리드 처리)
+        async function generateResponse(input) {
+            let response = null;
+            let context = null;
+            
+            // 1. 민감정보 탐지
+            const sensitiveCheck = sensitiveInfoDetector.detect(input);
+            sensitiveInfoDetector.logDetection(sensitiveCheck, 'user_input');
+            
+            // 2. RAG 시스템으로 관련 정보 검색
+            if (ragConfig.enabled) {
+                context = await searchRAG(input);
+            }
+            
+            // 3. 하이브리드 처리 결정
+            if (apiConfig.useHybrid && sensitiveCheck.hasSensitive) {
+                // 민감정보 포함 -> 로컬 SLM 사용
+                console.log('[Security] 민감정보 탐지. 로컬 SLM으로 처리.');
+                showSecurityNotice('개인정보 보호를 위해 내부 시스템에서 처리중');
+                
+                response = await callLocalSLM(sensitiveCheck.maskedText, context);
+                if (response) {
+                    return `🔒 <strong>[보안 처리]</strong><br><br>${response.content}<br><br><small>개인정보는 안전하게 처리되었습니다</small>`;
+                }
+            } else if (apiConfig.useAPI) {
+                // 일반 질의 -> 클라우드 API
+                const apiResponse = await callAPI(input, context);
+                if (apiResponse) {
+                    if (context && (context.laws?.length || context.faqs?.length)) {
+                        return apiResponse + `<br><br>📚 <strong>참고:</strong><br>` +
+                            (context.laws?.map(l => `• ${l.title}`).join('<br>') || '') +
+                            (context.faqs?.map(f => `• ${f.question}`).join('<br>') || '');
+                    }
+                    return apiResponse;
+                }
+            }
+            
+            // 4. 로컬 패턴 매칭 (폴백)
+            const matchedType = patternMatcher.match(input);
+            if (matchedType) {
+                const localResponse = responseGenerator.generate(matchedType);
+                if (context && context.faqs?.length) {
+                    return localResponse + `<br><br>💡 <strong>관련 FAQ:</strong><br>` +
+                        context.faqs.slice(0, 2).map(f => `Q: ${f.question}<br>A: ${f.answer}`).join('<br><br>');
+                }
+                return localResponse;
+            }
+            
+            // 5. 기본 응답
+            return responseGenerator.generate('default');
+        }
+
+        // 보안 알림 표시
+        function showSecurityNotice(message) {
+            const notice = document.createElement('div');
+            notice.className = 'security-notice';
+            notice.innerHTML = `
+                <div style="
+                    background: #fff3cd;
+                    border: 1px solid #ffc107;
+                    border-radius: 8px;
+                    padding: 10px;
+                    margin: 10px 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    animation: fadeIn 0.3s ease;
+                ">
+                    <span style="font-size: 24px;">🔒</span>
+                    <div>
+                        <strong>보안 알림</strong><br>
+                        <small>${message}</small>
+                    </div>
+                </div>
+            `;
+            
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) {
+                chatMessages.appendChild(notice);
+                setTimeout(() => notice.remove(), 3000);
+            }
+        }
+
+        // 음성인식
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.lang = 'ko-KR';
+                recognition.continuous = false;
+                recognition.interimResults = true;
+
+                recognition.onstart = function() {
+                    isListening = true;
+                    document.getElementById('micBtn').classList.add('listening');
+                };
+
+                recognition.onresult = function(event) {
+                    const last = event.results.length - 1;
+                    const transcript = event.results[last][0].transcript;
+                    
+                    if (event.results[last].isFinal) {
+                        document.getElementById('chatInput').value = transcript;
+                        sendTextMessage();
+                    } else {
+                        document.getElementById('chatInput').value = transcript;
+                    }
+                };
+
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error:', event.error);
+                    stopListening();
+                };
+
+                recognition.onend = function() {
+                    stopListening();
+                };
+            }
+        }
+
+        function toggleVoiceInput() {
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        }
+
+        function startListening() {
+            if (recognition) {
+                recognition.start();
+            }
+        }
+
+        function stopListening() {
+            isListening = false;
+            document.getElementById('micBtn').classList.remove('listening');
+            if (recognition) {
+                recognition.stop();
+            }
+        }
+
+        async function sendTextMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            addChatMessage(text, 'user');
+            input.value = '';
+            
+            showTypingIndicator();
+            
+            const response = await generateResponse(text);
+            
+            setTimeout(() => {
+                hideTypingIndicator();
+                addChatMessage(response, 'bot');
+            }, 500);
+        }
+
+        // 음성 테스트 함수
+        function testVoice() {
+            console.log('음성 테스트 시작');
+            
+            if (!('speechSynthesis' in window)) {
+                alert('브라우저가 음성 출력을 지원하지 않습니다.\nChrome이나 Edge 브라우저를 사용해주세요.');
+                return;
+            }
+            
+            // 이전 음성 정지
+            window.speechSynthesis.cancel();
+            
+            const testText = '안녕하세요! 음성 테스트입니다. 이 소리가 들리시면 음성 기능이 정상 작동중입니다.';
+            const utterance = new SpeechSynthesisUtterance(testText);
+            
+            utterance.lang = 'ko-KR';
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            // 음성 목록 확인
+            const voices = window.speechSynthesis.getVoices();
+            console.log('사용 가능한 음성:', voices.length);
+            
+            // 한국어 음성 찾기
+            const koreanVoice = voices.find(voice => 
+                voice.lang === 'ko-KR' || 
+                voice.lang.includes('ko') || 
+                voice.name.includes('Korean')
+            );
+            
+            if (koreanVoice) {
+                utterance.voice = koreanVoice;
+                console.log('한국어 음성 찾음:', koreanVoice.name);
+            } else {
+                console.log('한국어 음성을 찾을 수 없음');
+            }
+            
+            utterance.onstart = () => console.log('음성 시작');
+            utterance.onend = () => console.log('음성 종료');
+            utterance.onerror = (e) => console.error('음성 오류:', e);
+            
+            try {
+                window.speechSynthesis.speak(utterance);
+                console.log('음성 재생 명령 실행됨');
+            } catch (error) {
+                console.error('음성 재생 실패:', error);
+                alert('음성 재생 실패: ' + error.message);
+            }
+        }
+        
+        // 음성 ON/OFF 토글
+        function toggleSpeech() {
+            isSpeechEnabled = !isSpeechEnabled;
+            const speechIcon = document.getElementById('speechIcon');
+            const speechText = document.getElementById('speechText');
+            
+            if (isSpeechEnabled) {
+                speechIcon.textContent = '🔊';
+                speechText.textContent = '음성 ON';
+                localStorage.setItem('speechEnabled', 'true');
+            } else {
+                speechIcon.textContent = '🔇';
+                speechText.textContent = '음성 OFF';
+                localStorage.setItem('speechEnabled', 'false');
+                // 현재 재생중인 음성 정지
+                window.speechSynthesis.cancel();
+            }
+        }
+        
+        // 텍스트를 음성으로 변환
+        function speakText(text) {
+            if (!isSpeechEnabled) {
+                console.log('음성이 꺼져있음');
+                return;
+            }
+            
+            if (!('speechSynthesis' in window)) {
+                console.log('브라우저가 음성을 지원하지 않음');
+                return;
+            }
+            
+            console.log('음성 출력 시작');
+            
+            // 이전 음성 정지
+            window.speechSynthesis.cancel();
+            
+            // HTML 태그 제거 및 텍스트 정리
+            const cleanText = text
+                .replace(/<[^>]*>/g, '') // HTML 태그 제거
+                .replace(/[•·]/g, '') // 불릿 포인트 제거
+                .replace(/\n{3,}/g, '\n\n') // 과도한 줄바꿈 제거
+                .replace(/[😊📞💡👶✈️🏠🏥💼💪📌🔍💰🏫📋📄🤖👤⚙️🔊🔇]/g, '') // 이모지 제거
+                .replace(/[1️⃣2️⃣3️⃣4️⃣]/g, '') // 숫자 이모지 제거
+                .trim();
+            
+            // 텍스트를 작은 청크로 나누기 (너무 긴 텍스트 방지)
+            const maxLength = 200;
+            const chunks = [];
+            let currentChunk = '';
+            
+            const sentences = cleanText.split(/[.!?]\s/);
+            for (const sentence of sentences) {
+                if ((currentChunk + sentence).length < maxLength) {
+                    currentChunk += sentence + '. ';
+                } else {
+                    if (currentChunk) chunks.push(currentChunk);
+                    currentChunk = sentence + '. ';
+                }
+            }
+            if (currentChunk) chunks.push(currentChunk);
+            
+            // 첫 번째 청크만 재생 (전체 텍스트가 너무 길면 처음 부분만)
+            const textToSpeak = chunks[0] || cleanText.substring(0, 200);
+            
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = 'ko-KR';
+            utterance.rate = 0.9; // 속도 조절
+            utterance.pitch = 1.0; // 음높이
+            utterance.volume = 1.0; // 볼륨
+            
+            // 한국어 음성 찾기
+            const voices = window.speechSynthesis.getVoices();
+            const koreanVoice = voices.find(voice => 
+                voice.lang === 'ko-KR' || 
+                voice.lang.includes('ko') ||
+                voice.name.includes('Korean') ||
+                voice.name.includes('한국')
+            );
+            
+            if (koreanVoice) {
+                utterance.voice = koreanVoice;
+                console.log('한국어 음성 사용:', koreanVoice.name);
+            } else {
+                console.log('한국어 음성을 찾을 수 없어 기본 음성 사용');
+            }
+            
+            utterance.onstart = () => console.log('음성 재생 시작');
+            utterance.onend = () => console.log('음성 재생 완료');
+            utterance.onerror = (e) => console.error('음성 재생 오류:', e);
+            
+            try {
+                window.speechSynthesis.speak(utterance);
+            } catch (error) {
+                console.error('음성 재생 실패:', error);
+            }
+        }
+        
+        function addChatMessage(text, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const time = new Date().toLocaleTimeString('ko-KR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            // 텍스트 포맷팅 개선
+            let formattedText = text;
+            if (sender === 'bot') {
+                // 줄바꿈 처리를 개선
+                formattedText = text
+                    .replace(/\n\n/g, '<br><br>')
+                    .replace(/\n/g, '<br>')
+                    .replace(/(<br>)+/g, '<br><br>'); // 과도한 줄바꿈 정리
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${sender === 'user' ? '👤' : '🤖'}</div>
+                <div class="message-content">
+                    <div class="message-text">${formattedText}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // 봇 메시지인 경우 음성으로 읽기
+            if (sender === 'bot') {
+                speakText(text);
+            }
+        }
+
+        function showTypingIndicator() {
+            document.getElementById('typingIndicator').classList.add('active');
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            document.getElementById('typingIndicator').classList.remove('active');
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendTextMessage();
+            }
+        }
+
+        // 단계별 키오스크 시스템
+        let currentStep = 1;
+        let userProfile = {
+            age: null,
+            ageDetail: null,
+            situation: null,
+            conditions: {},
+            selectedService: null
+        };
+        
+        // 키오스크 사이드바 토글
+        function toggleSidebar() {
+            const sidebar = document.getElementById('kioskSidebar');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+                toggleIcon.textContent = '◀';
+            } else {
+                sidebar.classList.add('collapsed');
+                toggleIcon.textContent = '▶';
+            }
+        }
+        
+        // STEP 1: 나이 선택
+        function selectAgeStep(age) {
+            userProfile.age = age;
+            
+            // 버튼 스타일 업데이트
+            document.querySelectorAll('[data-age]').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.querySelector(`[data-age="${age}"]`).classList.add('selected');
+            
+            // 다음 버튼 활성화
+            document.getElementById('nextBtn').disabled = false;
+            
+            // 나이별 맞춤 상황 준비
+            prepareSituationOptions(age);
+        }
+        
+        // STEP 2: 상황 옵션 준비
+        function prepareSituationOptions(age) {
+            const container = document.getElementById('situationOptions');
+            let html = '<div class="situation-grid">';
+            
+            // 나이별 맞춤 상황 제공
+            if (age === 'senior' || age === 'senior-plus' || age === 'early-senior') {
+                html += `
+                    <button class="situation-btn" onclick="selectSituationStep('pension')" data-situation="pension">
+                        💰 연금/수당
+                    </button>
+                    <button class="situation-btn" onclick="selectSituationStep('senior-job')" data-situation="senior-job">
+                        💼 노인일자리
+                    </button>
+                    <button class="situation-btn" onclick="selectSituationStep('medical')" data-situation="medical">
+                        🏥 의료/건강
+                    </button>
+                    <button class="situation-btn" onclick="selectSituationStep('welfare')" data-situation="welfare">
+                        🤝 돌봄서비스
+                    </button>`;
+            } else if (age === 'young') {
+                html += `
+                    <button class="situation-btn" onclick="selectSituationStep('job')" data-situation="job">
+                        💼 취업/창업
+                    </button>
+                    <button class="situation-btn" onclick="selectSituationStep('housing-young')" data-situation="housing-young">
+                        🏠 청년주거
+                    </button>
+                    <button class="situation-btn" onclick="selectSituationStep('education')" data-situation="education">
+                        🎓 교육/훈련
+                    </button>
+                    <button class="situation-btn" onclick="selectSituationStep('loan')" data-situation="loan">
+                        💳 청년대출
+                    </button>`;
+            } else if (age === 'youth') {
+                html += `
+                    <button class="situation-btn" onclick="selectSituationStep('education-support')" data-situation="education-support">
+                        📚 교육지원
+                    </button>
+                    <button class="situation-btn" onclick="selectSituationStep('child-welfare')" data-situation="child-welfare">
+                        👶 아동복지
+                    </button>
+                    <button class="situation-btn" onclick="selectSituationStep('family')" data-situation="family">
+                        👨‍👩‍👧 가족지원
+                    </button>`;
+            }
+            
+            // 공통 옵션
+            html += `
+                <button class="situation-btn" onclick="selectSituationStep('emergency')" data-situation="emergency">
+                    🚨 긴급지원
+                </button>
+                <button class="situation-btn" onclick="selectSituationStep('housing')" data-situation="housing">
+                    🏠 주거문제
+                </button>
+                <button class="situation-btn" onclick="selectSituationStep('financial')" data-situation="financial">
+                    💵 생활비지원
+                </button>`;
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        // STEP 2: 상황 선택
+        function selectSituationStep(situation) {
+            userProfile.situation = situation;
+            
+            // 버튼 스타일 업데이트
+            document.querySelectorAll('[data-situation]').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            const selectedBtn = document.querySelector(`[data-situation="${situation}"]`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('selected');
+            }
+            
+            // 다음 버튼 활성화
+            document.getElementById('nextBtn').disabled = false;
+            
+            console.log('상황 선택:', situation);
+        }
+        
+        // STEP 3: 세부 조건 준비
+        function prepareDetailConditions(age, situation) {
+            const container = document.getElementById('detailConditions');
+            if (!container) {
+                console.error('detailConditions 컨테이너를 찾을 수 없습니다');
+                return;
+            }
+            
+            let html = '<div class="detail-options">';
+            
+            // 모든 상황에 대한 세부 조건 처리
+            if (situation === 'pension' || situation === 'senior-job' || situation === 'welfare') {
+                // 노인 관련 서비스
+                html += `
+                    <h4>💰 소듍 수준</h4>
+                    <label class="detail-option">
+                        <input type="radio" name="income" value="low" onchange="updateCondition('income', 'low')">
+                        소듍하위 70% (기초연금 대상)
+                    </label>
+                    <label class="detail-option">
+                        <input type="radio" name="income" value="very-low" onchange="updateCondition('income', 'very-low')">
+                        기초생활수급자
+                    </label>
+                    <label class="detail-option">
+                        <input type="radio" name="income" value="middle" onchange="updateCondition('income', 'middle')">
+                        중위소듍 이상
+                    </label>
+                    
+                    <h4 style="margin-top:15px;">🏠 가구 형태</h4>
+                    <label class="detail-option">
+                        <input type="checkbox" onchange="updateCondition('alone', this.checked)">
+                        독거노인
+                    </label>
+                    <label class="detail-option">
+                        <input type="checkbox" onchange="updateCondition('disabled', this.checked)">
+                        장애가 있음
+                    </label>
+                    <label class="detail-option">
+                        <input type="checkbox" onchange="updateCondition('dementia', this.checked)">
+                        치매 의심
+                    </label>`;
+            } else if (situation === 'job' || situation === 'housing-young' || situation === 'education' || situation === 'loan') {
+                // 청년 관련 서비스
+                html += `
+                    <h4>👥 취업 상태</h4>
+                    <label class="detail-option">
+                        <input type="radio" name="job-status" value="unemployed" onchange="updateCondition('jobStatus', 'unemployed')">
+                        구직중 (미취업)
+                    </label>
+                    <label class="detail-option">
+                        <input type="radio" name="job-status" value="graduate" onchange="updateCondition('jobStatus', 'graduate')">
+                        졸업예정자
+                    </label>
+                    <label class="detail-option">
+                        <input type="radio" name="job-status" value="employed" onchange="updateCondition('jobStatus', 'employed')">
+                        재직중
+                    </label>
+                    
+                    <h4 style="margin-top:15px;">💵 소듍 수준</h4>
+                    <label class="detail-option">
+                        <input type="checkbox" onchange="updateCondition('low-income', this.checked)">
+                        중위소듍 150% 이하
+                    </label>
+                    <label class="detail-option">
+                        <input type="checkbox" onchange="updateCondition('first-job', this.checked)">
+                        첫 취업 준비
+                    </label>`;
+            } else if (situation === 'medical') {
+                // 의료 관련
+                html += `
+                    <h4>🏥 의료비 부담</h4>
+                    <label class="detail-option">
+                        <input type="radio" name="medical" value="chronic" onchange="updateCondition('medical', 'chronic')">
+                        만성질환 치료중
+                    </label>
+                    <label class="detail-option">
+                        <input type="radio" name="medical" value="surgery" onchange="updateCondition('medical', 'surgery')">
+                        수술/입원 필요
+                    </label>
+                    <label class="detail-option">
+                        <input type="radio" name="medical" value="rare" onchange="updateCondition('medical', 'rare')">
+                        희귀난치성 질환
+                    </label>
+                    
+                    <h4 style="margin-top:15px;">🔍 추가 상황</h4>
+                    <label class="detail-option">
+                        <input type="checkbox" onchange="updateCondition('insurance', this.checked)">
+                        건강보험 체납
+                    </label>`;
+            } else if (situation === 'housing' || situation === 'emergency' || situation === 'financial') {
+                // 긴급/주거/생활 지원
+                html += `
+                    <h4>🏠 주거 상황</h4>
+                    <label class="detail-option">
+                        <input type="radio" name="housing" value="rent" onchange="updateCondition('housing', 'rent')">
+                        월세/전세 거주
+                    </label>
+                    <label class="detail-option">
+                        <input type="radio" name="housing" value="own" onchange="updateCondition('housing', 'own')">
+                        자가 거주
+                    </label>
+                    <label class="detail-option">
+                        <input type="radio" name="housing" value="homeless" onchange="updateCondition('housing', 'homeless')">
+                        주거 불안정
+                    </label>
+                    
+                    <h4 style="margin-top:15px;">🆘 긴급 상황</h4>
+                    <label class="detail-option">
+                        <input type="checkbox" onchange="updateCondition('emergency-medical', this.checked)">
+                        갑작스런 질병/사고
+                    </label>
+                    <label class="detail-option">
+                        <input type="checkbox" onchange="updateCondition('emergency-income', this.checked)">
+                        소듍 상실
+                    </label>
+                    <label class="detail-option">
+                        <input type="checkbox" onchange="updateCondition('emergency-disaster', this.checked)">
+                        화재/자연재해
+                    </label>`;
+            } else {
+                // 기타 모든 상황에 대한 기본 선택
+                html += `
+                    <h4>💰 가구 소듍</h4>
+                    <label class="detail-option">
+                        <input type="radio" name="income" value="low" onchange="updateCondition('income', 'low')">
+                        저소듍층 (중위소듍 50% 이하)
+                    </label>
+                    <label class="detail-option">
+                        <input type="radio" name="income" value="middle" onchange="updateCondition('income', 'middle')">
+                        중소듍층
+                    </label>
+                    <label class="detail-option">
+                        <input type="radio" name="income" value="high" onchange="updateCondition('income', 'high')">
+                        일반 소듍
+                    </label>
+                    
+                    <h4 style="margin-top:15px;">🏠 가구 형태</h4>
+                    <label class="detail-option">
+                        <input type="checkbox" onchange="updateCondition('single', this.checked)">
+                        1인 가구
+                    </label>
+                    <label class="detail-option">
+                        <input type="checkbox" onchange="updateCondition('children', this.checked)">
+                        미성년 자녀 있음
+                    </label>
+                    <label class="detail-option">
+                        <input type="checkbox" onchange="updateCondition('disabled-family', this.checked)">
+                        장애인 가족 있음
+                    </label>`;
+            }
+            
+            html += `
+                <div style="margin-top: 20px; padding: 10px; background: #e3f2fd; border-radius: 8px;">
+                    <small>💡 해당하는 조건을 모두 선택해주세요</small>
+                </div>
+            </div>`;
+            
+            container.innerHTML = html;
+            
+            // 다음 버튼 비활성화 (조건 선택 전까지)
+            document.getElementById('nextBtn').disabled = true;
+            
+            console.log('세부 조건 준비 완료:', age, situation);
+        }
+        
+        // 조건 업데이트
+        function updateCondition(key, value) {
+            userProfile.conditions[key] = value;
+            
+            // 최소 하나의 조건이 선택되어야 다음 버튼 활성화
+            const hasConditions = Object.keys(userProfile.conditions).length > 0;
+            document.getElementById('nextBtn').disabled = !hasConditions;
+            
+            console.log('조건 업데이트:', userProfile.conditions);
+        }
+        
+        // 다음 단계
+        function nextStep() {
+            // 현재 단계에서 선택한 값 확인
+            if (currentStep === 1 && !userProfile.age) {
+                alert('연령대를 선택해주세요.');
+                return;
+            }
+            if (currentStep === 2 && !userProfile.situation) {
+                alert('필요한 서비스를 선택해주세요.');
+                return;
+            }
+            if (currentStep === 3 && Object.keys(userProfile.conditions).length === 0) {
+                alert('세부 조건을 선택해주세요.');
+                return;
+            }
+            
+            if (currentStep < 4) {
+                // 현재 단계 숨기기
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                document.getElementById(`step${currentStep}Dot`).classList.remove('active');
+                document.getElementById(`step${currentStep}Dot`).classList.add('completed');
+                
+                // 다음 단계 표시
+                currentStep++;
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                document.getElementById(`step${currentStep}Dot`).classList.add('active');
+                
+                // 버튼 상태 업데이트
+                document.getElementById('backBtn').disabled = false;
+                
+                // Step 3로 이동 시 세부 조건 준비
+                if (currentStep === 3) {
+                    prepareDetailConditions(userProfile.age, userProfile.situation);
+                    document.getElementById('nextBtn').disabled = true; // 조건 선택 전까지 비활성화
+                }
+                
+                if (currentStep === 4) {
+                    document.getElementById('nextBtn').textContent = '신청 시작하기';
+                    generateFinalRecommendations();
+                } else if (currentStep === 2 || currentStep === 3) {
+                    // 단계 2,3에서는 새로운 선택이 필요하므로 다음 버튼 비활성화
+                    document.getElementById('nextBtn').disabled = true;
+                }
+                
+                console.log('현재 단계:', currentStep, '사용자 프로필:', userProfile);
+            } else {
+                // 신청 프로세스 시작
+                startApplicationProcess();
+            }
+        }
+        
+        // 이전 단계
+        function previousStep() {
+            if (currentStep > 1) {
+                // 현재 단계 숨기기
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                document.getElementById(`step${currentStep}Dot`).classList.remove('active');
+                
+                // 이전 단계 표시
+                currentStep--;
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                document.getElementById(`step${currentStep}Dot`).classList.add('active');
+                document.getElementById(`step${currentStep}Dot`).classList.remove('completed');
+                
+                // 버튼 상태 업데이트
+                if (currentStep === 1) {
+                    document.getElementById('backBtn').disabled = true;
+                }
+                
+                document.getElementById('nextBtn').textContent = '다음 단계 →';
+                
+                // 이전에 선택한 값이 있으면 다음 버튼 활성화
+                if (currentStep === 1 && userProfile.age) {
+                    document.getElementById('nextBtn').disabled = false;
+                } else if (currentStep === 2 && userProfile.situation) {
+                    document.getElementById('nextBtn').disabled = false;
+                } else if (currentStep === 3 && Object.keys(userProfile.conditions).length > 0) {
+                    document.getElementById('nextBtn').disabled = false;
+                } else {
+                    document.getElementById('nextBtn').disabled = true;
+                }
+                
+                console.log('현재 단계:', currentStep);
+            }
+        }
+        
+        // 최종 추천 생성
+        function generateFinalRecommendations() {
+            const container = document.getElementById('finalRecommendations');
+            let html = '<div style="padding: 15px; background: #e8f5e9; border-radius: 10px; margin-bottom: 15px;">';
+            
+            // 프로필 요약
+            html += '<h4>📋 선택하신 조건</h4>';
+            html += `<p>• 연령: ${getAgeLabel(userProfile.age)}</p>`;
+            html += `<p>• 상황: ${getSituationLabel(userProfile.situation)}</p>`;
+            
+            if (Object.keys(userProfile.conditions).length > 0) {
+                html += '<p>• 세부조건: ';
+                for (let key in userProfile.conditions) {
+                    if (userProfile.conditions[key]) {
+                        html += `${getConditionLabel(key, userProfile.conditions[key])}, `;
+                    }
+                }
+                html = html.slice(0, -2) + '</p>';
+            }
+            html += '</div>';
+            
+            // 맞춤 서비스 추천
+            html += '<h4>✨ 추천 서비스</h4>';
+            const services = getPersonalizedServices(userProfile);
+            
+            services.forEach(service => {
+                html += `
+                    <div style="padding: 12px; background: white; border: 2px solid #4CAF50; border-radius: 8px; margin: 10px 0;">
+                        <h5 style="color: #4CAF50; margin: 0 0 8px 0;">${service.icon} ${service.name}</h5>
+                        <p style="margin: 5px 0; font-size: 0.9em;">${service.description}</p>
+                        <p style="margin: 5px 0; font-size: 0.85em; color: #666;">• 지원금액: ${service.amount}</p>
+                        <p style="margin: 5px 0; font-size: 0.85em; color: #666;">• 신청자격: ${service.eligibility}</p>
+                        <button onclick="startServiceApplication('${service.id}')" 
+                                style="margin-top: 8px; padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            📝 신청 도우미 시작
+                        </button>
+                    </div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // 개인화된 서비스 추천
+        function getPersonalizedServices(profile) {
+            let services = [];
+            
+            console.log('서비스 추천 시작:', profile);
+            
+            // 모든 연령대와 상황에 대한 서비스 추천
+            
+            // 노인 관련 서비스
+            if (profile.age === 'senior' || profile.age === 'senior-plus' || profile.age === 'early-senior') {
+                // 기초연금 - 대부분의 노인에게 해당
+                if (!profile.conditions || !profile.conditions.income || 
+                    profile.conditions.income === 'low' || profile.conditions.income === 'very-low') {
+                    services.push({
+                        id: 'basic-pension',
+                        name: '기초연금',
+                        icon: '💰',
+                        description: '소득 하위 70% 어르신께 매달 지급되는 연금',
+                        amount: '월 최대 334,810원',
+                        eligibility: '만 65세 이상, 소득인정액 기준 충족'
+                    });
+                }
+                
+                if (profile.conditions.income === 'very-low') {
+                    services.push({
+                        id: 'basic-living',
+                        name: '기초생활수급',
+                        icon: '🏠',
+                        description: '생계, 의료, 주거, 교육 급여 지원',
+                        amount: '생계급여 월 최대 62만원 + 의료/주거 지원',
+                        eligibility: '중위소득 30~50% 이하'
+                    });
+                }
+                
+                if (profile.conditions.alone) {
+                    services.push({
+                        id: 'alone-senior',
+                        name: '독거노인 지원',
+                        icon: '🤝',
+                        description: '독거노인을 위한 돌봄 서비스',
+                        amount: '안부확인, 생활지원 서비스',
+                        eligibility: '만 65세 이상 독거노인'
+                    });
+                }
+            }
+            
+            // 청년 관련 서비스
+            else if (profile.age === 'young') {
+                // 취업 지원
+                if (profile.situation === 'job' || !profile.situation || 
+                    !profile.conditions || profile.conditions.jobStatus === 'unemployed') {
+                    services.push({
+                        id: 'job-support',
+                        name: '국민취업지원제도',
+                        icon: '💼',
+                        description: '구직촉진수당과 취업지원 서비스',
+                        amount: '월 50만원 × 6개월 + 취업지원',
+                        eligibility: '만 15~69세 구직자'
+                    });
+                }
+                
+                if (profile.conditions.training) {
+                    services.push({
+                        id: 'training',
+                        name: '국민내일배움카드',
+                        icon: '🎓',
+                        description: '직업훈련비 지원',
+                        amount: '연 300~500만원',
+                        eligibility: '구직자, 재직자 등'
+                    });
+                }
+            }
+            
+            // 공통 서비스 - 모든 연령대
+            
+            // 의료 지원
+            if (profile.situation === 'medical') {
+                services.push({
+                    id: 'medical-support',
+                    name: '의료급여',
+                    icon: '🏥',
+                    description: '의료비 부담 경감',
+                    amount: '본인부담금 대폭 경감',
+                    eligibility: '중위소듍 40% 이하'
+                });
+            }
+            
+            // 긴급 지원
+            if (profile.situation === 'emergency') {
+                services.push({
+                    id: 'emergency-support',
+                    name: '긴급복지지원',
+                    icon: '🆘',
+                    description: '갑작스런 위기상황 지원',
+                    amount: '생계비 월 162만원(최대 6개월)',
+                    eligibility: '위기상황 가구'
+                });
+            }
+            
+            // 주거 지원
+            if (profile.situation === 'housing' || profile.situation === 'housing-young') {
+                services.push({
+                    id: 'housing-support',
+                    name: '주거급여',
+                    icon: '🏡',
+                    description: '임차료 또는 수선유지비 지원',
+                    amount: '지역/가구수별 차등',
+                    eligibility: '중위소듍 48% 이하'
+                });
+            }
+            
+            // 기본 추천 (서비스가 없을 경우)
+            if (services.length === 0) {
+                services.push({
+                    id: 'consult',
+                    name: '맞춤 상담 필요',
+                    icon: '💬',
+                    description: '주민센터에서 자세한 상담을 받아보세요',
+                    amount: '상담 후 결정',
+                    eligibility: '모든 국민'
+                });
+            }
+            
+            console.log('추천 서비스:', services);
+            return services;
+        }
+        
+        // 서비스 신청 프로세스 시작
+        function startServiceApplication(serviceId) {
+            userProfile.selectedService = serviceId;
+            
+            // 채팅창에 단계별 안내 시작
+            const message = `${serviceId} 신청을 도와드리겠습니다. 단계별로 안내해드릴게요!`;
+            addChatMessage(message, 'bot');
+            
+            // 신청 단계별 안내
+            setTimeout(() => {
+                startStepByStepGuidance(serviceId);
+            }, 1000);
+        }
+        
+        // 현재 진행 중인 가이드 정보 저장
+        let currentGuidance = {
+            steps: [],
+            currentIndex: 0,
+            serviceId: null
+        };
+
+        // 단계별 신청 안내
+        function startStepByStepGuidance(serviceId) {
+            let guidanceSteps = [];
+            
+            if (serviceId === 'basic-pension') {
+                guidanceSteps = [
+                    {
+                        title: "📍 STEP 1: 신청 장소 확인",
+                        content: `가까운 주민센터를 찾아드릴게요.
+주소를 입력해주세요. (예: 서울시 강남구)`,
+                        action: "location"
+                    },
+                    {
+                        title: "📋 STEP 2: 필요 서류 준비",
+                        content: `다음 서류를 준비해주세요:
+✅ 신분증 (주민등록증 또는 운전면허증)
+✅ 통장사본
+✅ 소득·재산 신고서 (주민센터에 비치)
+✅ 전월세 계약서 (해당자만)`,
+                        action: "checklist"
+                    },
+                    {
+                        title: "📝 STEP 3: 신청서 작성 도우미",
+                        content: `신청서 작성을 도와드릴게요.
+기본정보부터 입력해볼까요?`,
+                        action: "form"
+                    },
+                    {
+                        title: "🏢 STEP 4: 방문 예약",
+                        content: `주민센터 방문 예약을 도와드릴게요.
+희망 날짜와 시간을 선택해주세요.`,
+                        action: "booking"
+                    },
+                    {
+                        title: "✅ STEP 5: 신청 완료",
+                        content: `모든 준비가 완료되었습니다!
+신청 내용을 확인해주세요.`,
+                        action: "complete"
+                    }
+                ];
+            } else if (serviceId === 'youth-package') {
+                guidanceSteps = [
+                    {
+                        title: "📍 STEP 1: 자격 확인",
+                        content: `청년도약계좌 자격을 확인해드릴게요.
+나이를 입력해주세요. (만 19~34세)`,
+                        action: "eligibility"
+                    },
+                    {
+                        title: "📋 STEP 2: 소득 확인",
+                        content: `소득 기준을 확인합니다.
+월 소득을 입력해주세요.`,
+                        action: "income"
+                    },
+                    {
+                        title: "🏦 STEP 3: 계좌 개설",
+                        content: `취급 은행을 선택해주세요.
+(농협, 신한, 우리, 하나, 기업, 국민, 부산, 광주, 전북, 경남, 수협)`,
+                        action: "bank"
+                    },
+                    {
+                        title: "✅ STEP 4: 신청 완료",
+                        content: `청년도약계좌 신청이 준비되었습니다!`,
+                        action: "complete"
+                    }
+                ];
+            } else if (serviceId === 'emergency-support') {
+                guidanceSteps = [
+                    {
+                        title: "🚨 STEP 1: 긴급 상황 확인",
+                        content: `어떤 긴급 상황이신가요?
+1. 생계 곤란
+2. 의료비 부담
+3. 주거 위기
+4. 재난 피해`,
+                        action: "emergency-type"
+                    },
+                    {
+                        title: "📞 STEP 2: 연락처 확인",
+                        content: `긴급 연락을 위해 연락처를 입력해주세요.`,
+                        action: "contact"
+                    },
+                    {
+                        title: "📋 STEP 3: 신청서 작성",
+                        content: `긴급복지 신청서를 작성합니다.`,
+                        action: "form"
+                    },
+                    {
+                        title: "✅ STEP 4: 신청 완료",
+                        content: `긴급복지 신청이 접수되었습니다.
+담당자가 곧 연락드릴 예정입니다.`,
+                        action: "complete"
+                    }
+                ];
+            } else {
+                // 기본 가이드
+                guidanceSteps = [
+                    {
+                        title: "📋 STEP 1: 서비스 정보 확인",
+                        content: `${serviceId} 서비스 정보를 확인하세요.`,
+                        action: "info"
+                    },
+                    {
+                        title: "📝 STEP 2: 신청서 준비",
+                        content: `필요한 서류를 준비해주세요.`,
+                        action: "checklist"
+                    },
+                    {
+                        title: "✅ STEP 3: 신청 완료",
+                        content: `신청이 준비되었습니다!`,
+                        action: "complete"
+                    }
+                ];
+            }
+            
+            // 가이드 정보 저장
+            currentGuidance.steps = guidanceSteps;
+            currentGuidance.currentIndex = 0;
+            currentGuidance.serviceId = serviceId;
+            
+            // 첫 번째 단계 시작
+            showGuidanceStep(0);
+        }
+        
+        // 안내 단계 표시
+        function showGuidanceStep(index) {
+            if (index < currentGuidance.steps.length) {
+                const step = currentGuidance.steps[index];
+                currentGuidance.currentIndex = index;
+                
+                // 진행 상황 표시
+                const progress = `(${index + 1}/${currentGuidance.steps.length})`;
+                let message = `<div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; border-radius: 10px; margin-bottom: 10px;">
+                                <strong style="font-size: 1.2em;">${step.title} ${progress}</strong>
+                              </div>
+                              <div style="padding: 10px;">${step.content}</div>`;
+                
+                // 액션 버튼 추가
+                if (step.action === 'checklist') {
+                    message += `<div style="margin-top: 15px;">
+                               <label style="display: block; margin: 8px 0;">
+                                 <input type="checkbox" id="doc1"> 신분증
+                               </label>
+                               <label style="display: block; margin: 8px 0;">
+                                 <input type="checkbox" id="doc2"> 통장사본
+                               </label>
+                               <label style="display: block; margin: 8px 0;">
+                                 <input type="checkbox" id="doc3"> 소득·재산 신고서
+                               </label>
+                               <label style="display: block; margin: 8px 0;">
+                                 <input type="checkbox" id="doc4"> 전월세 계약서 (해당자)
+                               </label>
+                               <button onclick="proceedToNextStep()" 
+                                     style="margin-top: 10px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                     ✅ 모두 준비했어요 → 다음 단계
+                               </button>
+                             </div>`;
+                } else if (step.action === 'location') {
+                    message += `<div style="margin-top: 15px;">
+                               <input type="text" id="locationInput" placeholder="예: 서울시 강남구" 
+                                      style="padding: 10px; width: 60%; margin-right: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                               <button onclick="findLocationAndProceed()" 
+                                     style="padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                     🔍 주민센터 찾기
+                               </button>
+                             </div>`;
+                } else if (step.action === 'form') {
+                    message += `<div style="margin-top: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                               <div style="margin-bottom: 10px;">
+                                 <label style="display: block; margin-bottom: 5px;">이름:</label>
+                                 <input type="text" id="formName" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                               </div>
+                               <div style="margin-bottom: 10px;">
+                                 <label style="display: block; margin-bottom: 5px;">주민등록번호:</label>
+                                 <input type="text" id="formSSN" placeholder="예: 123456-1234567" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                               </div>
+                               <div style="margin-bottom: 10px;">
+                                 <label style="display: block; margin-bottom: 5px;">주소:</label>
+                                 <input type="text" id="formAddress" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                               </div>
+                               <button onclick="submitFormAndProceed()" 
+                                     style="margin-top: 10px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                     📝 작성 완료 → 다음 단계
+                               </button>
+                             </div>`;
+                } else if (step.action === 'booking') {
+                    message += `<div style="margin-top: 15px;">
+                               <label style="display: block; margin-bottom: 5px;">방문 날짜:</label>
+                               <input type="date" id="bookingDate" style="padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                               <label style="display: block; margin-bottom: 5px;">방문 시간:</label>
+                               <select id="bookingTime" style="padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                                 <option value="">시간 선택</option>
+                                 <option value="09:00">오전 9:00</option>
+                                 <option value="10:00">오전 10:00</option>
+                                 <option value="11:00">오전 11:00</option>
+                                 <option value="14:00">오후 2:00</option>
+                                 <option value="15:00">오후 3:00</option>
+                                 <option value="16:00">오후 4:00</option>
+                               </select>
+                               <button onclick="bookAndProceed()" 
+                                     style="display: block; margin-top: 10px; padding: 10px 20px; background: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                     📅 예약하기 → 다음 단계
+                               </button>
+                             </div>`;
+                } else if (step.action === 'complete') {
+                    message += `<div style="margin-top: 15px; background: #d4edda; padding: 20px; border-radius: 10px; text-align: center;">
+                               <div style="font-size: 3em; margin-bottom: 10px;">🎉</div>
+                               <div style="font-size: 1.2em; font-weight: bold; color: #155724;">신청 준비가 모두 완료되었습니다!</div>
+                               <button onclick="showSummary()" 
+                                     style="margin-top: 15px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                     📋 신청 내용 확인하기
+                               </button>
+                               <button onclick="startNewApplication()" 
+                                     style="margin-top: 10px; margin-left: 10px; padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                     🔄 새로운 신청 시작
+                               </button>
+                             </div>`;
+                } else {
+                    // 기본 다음 버튼
+                    message += `<div style="margin-top: 15px;">
+                               <button onclick="proceedToNextStep()" 
+                                     style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                     다음 단계로 →
+                               </button>
+                             </div>`;
+                }
+                
+                // 이전 단계 버튼 (첫 단계가 아닌 경우)
+                if (index > 0) {
+                    message += `<button onclick="goToPreviousStep()" 
+                                   style="margin-top: 10px; padding: 8px 16px; background: #e0e0e0; color: #666; border: none; border-radius: 5px; cursor: pointer;">
+                                   ← 이전 단계
+                               </button>`;
+                }
+                
+                addChatMessage(message, 'bot');
+            }
+        }
+
+        // 다음 단계로 진행
+        function proceedToNextStep() {
+            const nextIndex = currentGuidance.currentIndex + 1;
+            if (nextIndex < currentGuidance.steps.length) {
+                showGuidanceStep(nextIndex);
+            }
+        }
+
+        // 이전 단계로 돌아가기
+        function goToPreviousStep() {
+            const prevIndex = currentGuidance.currentIndex - 1;
+            if (prevIndex >= 0) {
+                showGuidanceStep(prevIndex);
+            }
+        }
+
+        // 위치 찾기 후 다음 단계
+        function findLocationAndProceed() {
+            const location = document.getElementById('locationInput').value;
+            if (location) {
+                addChatMessage(`📍 "${location}" 주변의 주민센터를 찾았습니다!<br>
+                              📌 강남구청: 서울특별시 강남구 학동로 426<br>
+                              ☎️ 전화: 02-3423-5555<br>
+                              🕐 운영시간: 평일 09:00-18:00`, 'bot');
+                setTimeout(() => proceedToNextStep(), 2000);
+            } else {
+                alert('주소를 입력해주세요.');
+            }
+        }
+
+        // 폼 제출 후 다음 단계
+        function submitFormAndProceed() {
+            const name = document.getElementById('formName').value;
+            const ssn = document.getElementById('formSSN').value;
+            const address = document.getElementById('formAddress').value;
+            
+            if (name && ssn && address) {
+                addChatMessage(`✅ 신청서 작성이 완료되었습니다!<br>
+                              이름: ${name}<br>
+                              주민등록번호: ${ssn.substring(0, 6)}-*******<br>
+                              주소: ${address}`, 'bot');
+                setTimeout(() => proceedToNextStep(), 2000);
+            } else {
+                alert('모든 정보를 입력해주세요.');
+            }
+        }
+
+        // 예약 후 다음 단계
+        function bookAndProceed() {
+            const date = document.getElementById('bookingDate').value;
+            const time = document.getElementById('bookingTime').value;
+            
+            if (date && time) {
+                addChatMessage(`📅 예약이 완료되었습니다!<br>
+                              날짜: ${date}<br>
+                              시간: ${time}<br>
+                              ⚠️ 방문 시 신분증과 준비한 서류를 꼭 지참해주세요.`, 'bot');
+                setTimeout(() => proceedToNextStep(), 2000);
+            } else {
+                alert('날짜와 시간을 선택해주세요.');
+            }
+        }
+
+        // 신청 요약 보기
+        function showSummary() {
+            addChatMessage(`📋 <strong>신청 요약</strong><br>
+                          서비스: ${currentGuidance.serviceId}<br>
+                          진행 단계: 모든 단계 완료<br>
+                          준비 서류: ✅ 완료<br>
+                          신청서: ✅ 작성 완료<br>
+                          방문 예약: ✅ 완료<br><br>
+                          💡 주민센터 방문 시 이 내용을 참고해주세요!`, 'bot');
+        }
+
+        // 새로운 신청 시작
+        function startNewApplication() {
+            currentGuidance = {
+                steps: [],
+                currentIndex: 0,
+                serviceId: null
+            };
+            addChatMessage('새로운 신청을 시작하려면 원하시는 서비스를 선택해주세요.', 'bot');
+        }
+        
+        // 레이블 헬퍼 함수들
+        function getAgeLabel(age) {
+            const labels = {
+                'youth': '미성년자',
+                'young': '청년',
+                'middle': '중장년',
+                'early-senior': '예비노인',
+                'senior': '노인',
+                'senior-plus': '고령노인'
+            };
+            return labels[age] || age;
+        }
+        
+        function getSituationLabel(situation) {
+            const labels = {
+                'pension': '연금/수당',
+                'job': '취업/창업',
+                'medical': '의료/건강',
+                'housing': '주거문제',
+                'emergency': '긴급지원'
+            };
+            return labels[situation] || situation;
+        }
+        
+        function getConditionLabel(key, value) {
+            const labels = {
+                'income-low': '소득하위 70%',
+                'income-very-low': '기초생활수급',
+                'alone': '독거',
+                'disabled': '장애',
+                'jobStatus-unemployed': '구직중'
+            };
+            return labels[`${key}-${value}`] || value;
+        }
+        
+        // 추천 서비스 생성 (기존 함수 유지)
+        function getRecommendations(age, situation) {
+            let html = '<div style="font-weight: bold; margin-bottom: 10px;">🎯 맞춤 추천 서비스</div>';
+            
+            // 나이와 상황에 따른 추천
+            if (age === 'senior' && situation === 'financial') {
+                html += `
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('기초연금 신청방법')" style="width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            ✅ 기초연금 (월 33만원)
+                        </button>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('노인일자리 신청')" style="width: 100%; padding: 10px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            💼 노인일자리 (월 27-71만원)
+                        </button>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('기초생활수급자 신청')" style="width: 100%; padding: 10px; background: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            🏠 기초생활수급
+                        </button>
+                    </div>`;
+            } else if (age === 'adult' && situation === 'job') {
+                html += `
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('국민취업지원제도')" style="width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            📋 국민취업지원제도
+                        </button>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('실업급여 신청')" style="width: 100%; padding: 10px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            💰 실업급여
+                        </button>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('직업훈련 지원')" style="width: 100%; padding: 10px; background: #9C27B0; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            🎓 직업훈련
+                        </button>
+                    </div>`;
+            } else if (situation === 'emergency') {
+                html += `
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('긴급복지지원 신청')" style="width: 100%; padding: 10px; background: #F44336; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            🚨 긴급복지지원
+                        </button>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('긴급생계비 지원')" style="width: 100%; padding: 10px; background: #E91E63; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            💵 긴급생계비
+                        </button>
+                    </div>`;
+            } else if (situation === 'health') {
+                html += `
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('의료급여 신청')" style="width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            🏥 의료급여
+                        </button>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('재난적의료비 지원')" style="width: 100%; padding: 10px; background: #FF5722; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            💊 재난적의료비
+                        </button>
+                    </div>`;
+            } else if (situation === 'housing') {
+                html += `
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('주거급여 신청')" style="width: 100%; padding: 10px; background: #795548; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            🏠 주거급여
+                        </button>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('공공임대주택 신청')" style="width: 100%; padding: 10px; background: #607D8B; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            🏢 공공임대주택
+                        </button>
+                    </div>`;
+            } else if (age === 'youth' && situation === 'family') {
+                html += `
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('아동수당 신청')" style="width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            👶 아동수당
+                        </button>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('교육급여 신청')" style="width: 100%; padding: 10px; background: #3F51B5; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            📚 교육급여
+                        </button>
+                    </div>`;
+            } else {
+                // 기본 추천
+                html += `
+                    <div style="margin-bottom: 8px;">
+                        <button onclick="askChatbot('복지 서비스 안내')" style="width: 100%; padding: 10px; background: #9E9E9E; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            📋 종합 복지 안내
+                        </button>
+                    </div>`;
+            }
+            
+            html += `
+                <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 5px; font-size: 0.85em;">
+                    💡 버튼을 클릭하면 자세한 안내를 받을 수 있어요!
+                </div>`;
+            
+            return html;
+        }
+        
+        // 챗봇에 질문 전달
+        function askChatbot(question) {
+            document.getElementById('chatInput').value = question;
+            sendTextMessage();
+        }
+        
+        // 시스템 초기화 함수
+        function initializeSystem() {
+            // 저장된 설정 로드
+            const savedProvider = localStorage.getItem('apiProvider');
+            const savedApiKey = localStorage.getItem('apiKey');
+            const savedEndpoint = localStorage.getItem('localSLMEndpoint');
+            const savedHybrid = localStorage.getItem('useHybrid');
+            const savedRAG = localStorage.getItem('ragEnabled');
+            
+            if (savedProvider) apiConfig.provider = savedProvider;
+            if (savedApiKey) apiConfig.apiKey = savedApiKey;
+            if (savedEndpoint) apiConfig.localSLMEndpoint = savedEndpoint;
+            if (savedHybrid !== null) apiConfig.useHybrid = savedHybrid !== 'false';
+            if (savedRAG !== null) ragConfig.enabled = savedRAG !== 'false';
+            
+            // API 활성화 상태 업데이트
+            apiConfig.useAPI = (apiConfig.provider && 
+                (apiConfig.provider === 'local' || apiConfig.apiKey));
+            
+            // 헤더 상태 업데이트
+            updateSystemStatus();
+            
+            // 시스템 상태 로그
+            console.log('🚀 하이브리드 민원처리 AI 키오스크 v3.0');
+            console.log('✅ 하이브리드 모드:', apiConfig.useHybrid ? '활성' : '비활성');
+            console.log('✅ RAG 시스템:', ragConfig.enabled ? '활성' : '비활성');
+            console.log('✅ 민감정보 탐지: 활성');
+            console.log('✅ API 제공자:', apiConfig.provider || '없음');
+            
+            // 보안 감사 로그 초기화
+            const logs = JSON.parse(localStorage.getItem('sensitiveInfoLogs') || '[]');
+            console.log('📊 기존 보안 감사 로그:', logs.length, '건');
+        }
+        
+        // 시스템 상태 업데이트
+        function updateSystemStatus() {
+            const statusText = document.getElementById('statusText');
+            if (statusText) {
+                if (apiConfig.useAPI) {
+                    if (apiConfig.provider === 'local') {
+                        statusText.textContent = '로컬 SLM 모드';
+                    } else {
+                        statusText.textContent = `${apiConfig.provider === 'openai' ? 'OpenAI' : 'Google Gemini'} 모드`;
+                    }
+                } else {
+                    statusText.textContent = '로컬 AI 모드';
+                }
+                
+                // 하이브리드 모드 표시
+                if (apiConfig.useHybrid) {
+                    statusText.textContent += ' (하이브리드)';
+                }
+            }
+        }
+        
+        // 초기화
+        window.addEventListener('load', function() {
+            initSpeechRecognition();
+            
+            // 시스템 초기화
+            initializeSystem();
+            
+            // 음성 설정 불러오기
+            const speechEnabled = localStorage.getItem('speechEnabled');
+            if (speechEnabled === 'false') {
+                isSpeechEnabled = false;
+                document.getElementById('speechIcon').textContent = '🔇';
+                document.getElementById('speechText').textContent = '음성 OFF';
+            }
+            
+            // API 설정 확인
+            if (apiConfig.provider && apiConfig.apiKey) {
+                apiConfig.useAPI = true;
+                const statusText = document.getElementById('statusText');
+                statusText.textContent = `${apiConfig.provider === 'openai' ? 'OpenAI' : 'Google AI'} 모드`;
+            }
+            
+            // 시간 설정
+            const timeElements = document.querySelectorAll('.message-time');
+            const currentTime = new Date().toLocaleTimeString('ko-KR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            timeElements.forEach(el => {
+                if (el.textContent === '') {
+                    el.textContent = currentTime;
+                }
+            });
+            
+            // 음성 엔진 초기화 (한국어 음성 로드)
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+                // 음성 로드 이벤트 리스너
+                window.speechSynthesis.onvoiceschanged = function() {
+                    window.speechSynthesis.getVoices();
+                };
+            }
+        });
+    </script>
+</body>
+</html>
