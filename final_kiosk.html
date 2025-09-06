@@ -853,6 +853,17 @@
                         <button class="situation-btn" onclick="selectAgeStep('senior-plus')" data-age="senior-plus">
                             🧓 고령노인<br>(75세 이상)
                         </button>
+                        <button class="situation-btn" onclick="showCustomAgeInput()" data-age="other">
+                            ✏️ 기타<br>(직접 입력)
+                        </button>
+                    </div>
+                    <div id="customAgeInput" style="display: none; margin-top: 15px;">
+                        <input type="text" id="customAge" placeholder="나이를 입력하세요 (예: 45세)" 
+                               style="padding: 10px; width: 200px; border: 1px solid #ddd; border-radius: 5px;">
+                        <button onclick="submitCustomAge()" 
+                                style="padding: 10px 20px; margin-left: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            확인
+                        </button>
                     </div>
                 </div>
             </div>
@@ -2535,7 +2546,25 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                     💵 생활비지원
                 </button>`;
             
+            // 모든 연령대에 기타 옵션 추가
+            html += `
+                <button class="situation-btn" onclick="showCustomSituationInput()" data-situation="other">
+                    ✏️ 기타<br>(직접 입력)
+                </button>`;
+            
             html += '</div>';
+            
+            // 사용자 정의 입력 영역 추가
+            html += `
+                <div id="customSituationInput" style="display: none; margin-top: 15px;">
+                    <input type="text" id="customSituation" placeholder="상황을 입력하세요 (예: 이사, 출산, 창업 등)" 
+                           style="padding: 10px; width: 100%; border: 1px solid #ddd; border-radius: 5px;">
+                    <button onclick="submitCustomSituation()" 
+                            style="margin-top: 10px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%;">
+                        확인
+                    </button>
+                </div>`;
+            
             container.innerHTML = html;
         }
         
@@ -2712,6 +2741,20 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
             html += `
                 <div style="margin-top: 20px; padding: 10px; background: #e3f2fd; border-radius: 8px;">
                     <small>💡 해당하는 조건을 모두 선택해주세요</small>
+                </div>
+                
+                <h4 style="margin-top:15px;">✏️ 기타 조건</h4>
+                <label class="detail-option">
+                    <input type="checkbox" onchange="showCustomConditionInput()">
+                    기타 (직접 입력)
+                </label>
+                <div id="customConditionInput" style="display: none; margin-top: 10px;">
+                    <textarea id="customCondition" placeholder="추가 조건이나 특별한 상황을 입력하세요" 
+                              style="width: 100%; padding: 8px; height: 60px; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                    <button onclick="submitCustomCondition()" 
+                            style="margin-top: 5px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        추가
+                    </button>
                 </div>
             </div>`;
             
@@ -3409,6 +3452,56 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
             addChatMessage('새로운 신청을 시작하려면 원하시는 서비스를 선택해주세요.', 'bot');
         }
 
+        // 나이 직접 입력 표시
+        function showCustomAgeInput() {
+            document.getElementById('customAgeInput').style.display = 'block';
+            // 다른 버튼 선택 해제
+            document.querySelectorAll('[data-age]').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.querySelector('[data-age="other"]').classList.add('selected');
+        }
+
+        // 나이 직접 입력 제출
+        function submitCustomAge() {
+            const customAge = document.getElementById('customAge').value;
+            if (customAge) {
+                userProfile.age = 'custom';
+                userProfile.customAge = customAge;
+                document.getElementById('nextBtn').disabled = false;
+                alert(`${customAge}로 설정되었습니다.`);
+                // 상황 옵션 준비
+                prepareSituationOptions('custom');
+            } else {
+                alert('나이를 입력해주세요.');
+            }
+        }
+
+        // 상황 직접 입력 표시
+        function showCustomSituationInput() {
+            document.getElementById('customSituationInput').style.display = 'block';
+            // 다른 버튼 선택 해제
+            document.querySelectorAll('[data-situation]').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.querySelector('[data-situation="other"]').classList.add('selected');
+        }
+
+        // 상황 직접 입력 제출
+        function submitCustomSituation() {
+            const customSituation = document.getElementById('customSituation').value;
+            if (customSituation) {
+                userProfile.situation = 'custom';
+                userProfile.customSituation = customSituation;
+                document.getElementById('nextBtn').disabled = false;
+                alert(`"${customSituation}" 상황으로 설정되었습니다.`);
+                // 세부 조건 준비
+                prepareDetailConditions('custom');
+            } else {
+                alert('상황을 입력해주세요.');
+            }
+        }
+
         // 사용자 정의 서비스 저장 후 진행
         function saveCustomServiceAndProceed() {
             const customService = document.getElementById('customServiceInput').value;
@@ -3418,6 +3511,29 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                 setTimeout(() => proceedToNextStep(), 1500);
             } else {
                 alert('서비스 내용을 입력해주세요.');
+            }
+        }
+
+        // 세부 조건 직접 입력 표시
+        function showCustomConditionInput() {
+            const checkbox = event.target;
+            const inputDiv = document.getElementById('customConditionInput');
+            if (checkbox.checked) {
+                inputDiv.style.display = 'block';
+            } else {
+                inputDiv.style.display = 'none';
+            }
+        }
+
+        // 세부 조건 직접 입력 제출
+        function submitCustomCondition() {
+            const customCondition = document.getElementById('customCondition').value;
+            if (customCondition) {
+                userProfile.conditions.customCondition = customCondition;
+                alert(`추가 조건이 저장되었습니다: ${customCondition}`);
+                document.getElementById('nextBtn').disabled = false;
+            } else {
+                alert('조건을 입력해주세요.');
             }
         }
 
