@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0; url=final_kiosk.html">
+    <title>이동 중...</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+        }
+        .redirect-message {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        a {
+            color: white;
+            text-decoration: underline;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .loading {
+            margin: 20px 0;
+            font-size: 40px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="redirect-message">
+        <div class="loading">⚙️</div>
+        <h1>최신 버전으로 이동 중...</h1>
+        <p>자동으로 이동되지 않으면 <a href="final_kiosk.html">여기를 클릭</a>하세요.</p>
+        <p style="margin-top: 30px; font-size: 0.9em; opacity: 0.8;">
+            📌 즐겨찾기를 업데이트해주세요!<br>
+            새 파일: final_kiosk.html<br>
+            (API 설정 기능이 추가된 최신 버전)
+        </p>
+    </div>
+    <script>
+        // 자동 리디렉션
+        setTimeout(() => {
+            window.location.href = 'final_kiosk.html';
+        }, 100);
+    </script>
+</body>
+</html>
