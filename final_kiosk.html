@@ -2985,6 +2985,16 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                 });
             }
             
+            // 항상 마지막에 기타 옵션 추가
+            services.push({
+                id: 'other',
+                name: '기타 서비스 (직접 입력)',
+                icon: '✏️',
+                description: '위 목록에 없는 서비스를 직접 입력하여 신청하세요',
+                amount: '서비스별 상이',
+                eligibility: '서비스별 상이'
+            });
+            
             console.log('추천 서비스:', services);
             return services;
         }
@@ -3104,6 +3114,31 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                         action: "complete"
                     }
                 ];
+            } else if (serviceId === 'other' || serviceId === '기타') {
+                // 기타 서비스 - 사용자 입력
+                guidanceSteps = [
+                    {
+                        title: "📝 STEP 1: 서비스 입력",
+                        content: `어떤 서비스를 신청하고 싶으신가요?
+직접 입력해주세요.`,
+                        action: "custom-input"
+                    },
+                    {
+                        title: "📋 STEP 2: 정보 입력",
+                        content: `필요한 정보를 입력해주세요.`,
+                        action: "custom-form"
+                    },
+                    {
+                        title: "📍 STEP 3: 신청 방법 확인",
+                        content: `신청 방법을 안내해드릴게요.`,
+                        action: "custom-guide"
+                    },
+                    {
+                        title: "✅ STEP 4: 신청 완료",
+                        content: `신청 준비가 완료되었습니다!`,
+                        action: "complete"
+                    }
+                ];
             } else {
                 // 기본 가이드
                 guidanceSteps = [
@@ -3212,6 +3247,47 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                                <button onclick="bookAndProceed()" 
                                      style="display: block; margin-top: 10px; padding: 10px 20px; background: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
                                      📅 예약하기 → 다음 단계
+                               </button>
+                             </div>`;
+                } else if (step.action === 'custom-input') {
+                    message += `<div style="margin-top: 15px;">
+                               <textarea id="customServiceInput" placeholder="예: 여권 재발급, 혼인신고, 사업자등록 등" 
+                                      style="width: 100%; padding: 10px; height: 80px; border: 1px solid #ddd; border-radius: 5px; resize: vertical;"></textarea>
+                               <button onclick="saveCustomServiceAndProceed()" 
+                                     style="margin-top: 10px; padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                     💾 저장하고 다음 단계로 →
+                               </button>
+                             </div>`;
+                } else if (step.action === 'custom-form') {
+                    message += `<div style="margin-top: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                               <div style="margin-bottom: 10px;">
+                                 <label style="display: block; margin-bottom: 5px;">추가 정보나 질문사항:</label>
+                                 <textarea id="customInfoInput" placeholder="필요한 정보나 궁금한 점을 자유롭게 입력해주세요" 
+                                          style="width: 100%; padding: 8px; height: 100px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                               </div>
+                               <div style="margin-bottom: 10px;">
+                                 <label style="display: block; margin-bottom: 5px;">연락처 (선택):</label>
+                                 <input type="tel" id="customContact" placeholder="010-0000-0000" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                               </div>
+                               <button onclick="submitCustomInfoAndProceed()" 
+                                     style="margin-top: 10px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                     📝 정보 제출 → 다음 단계
+                               </button>
+                             </div>`;
+                } else if (step.action === 'custom-guide') {
+                    const customService = localStorage.getItem('customService') || '입력하신 서비스';
+                    message += `<div style="margin-top: 15px; background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                               <h4>📌 ${customService} 신청 방법</h4>
+                               <p style="margin-top: 10px;">입력하신 내용을 바탕으로 안내해드립니다:</p>
+                               <ol style="margin-top: 10px; padding-left: 20px;">
+                                 <li>가까운 주민센터 또는 구청 방문</li>
+                                 <li>정부24(www.gov.kr)에서 온라인 신청 확인</li>
+                                 <li>필요 서류: 신분증, 관련 증빙서류</li>
+                                 <li>콜센터 문의: 110 (정부민원안내)</li>
+                               </ol>
+                               <button onclick="proceedToNextStep()" 
+                                     style="margin-top: 15px; padding: 10px 20px; background: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                     확인했어요 → 다음 단계
                                </button>
                              </div>`;
                 } else if (step.action === 'complete') {
@@ -3331,6 +3407,36 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                 serviceId: null
             };
             addChatMessage('새로운 신청을 시작하려면 원하시는 서비스를 선택해주세요.', 'bot');
+        }
+
+        // 사용자 정의 서비스 저장 후 진행
+        function saveCustomServiceAndProceed() {
+            const customService = document.getElementById('customServiceInput').value;
+            if (customService) {
+                localStorage.setItem('customService', customService);
+                addChatMessage(`✅ "${customService}" 서비스로 진행합니다.`, 'bot');
+                setTimeout(() => proceedToNextStep(), 1500);
+            } else {
+                alert('서비스 내용을 입력해주세요.');
+            }
+        }
+
+        // 사용자 정의 정보 제출 후 진행
+        function submitCustomInfoAndProceed() {
+            const info = document.getElementById('customInfoInput').value;
+            const contact = document.getElementById('customContact').value;
+            
+            if (info) {
+                let confirmMessage = `✅ 정보가 저장되었습니다!<br>`;
+                confirmMessage += `내용: ${info}<br>`;
+                if (contact) {
+                    confirmMessage += `연락처: ${contact}`;
+                }
+                addChatMessage(confirmMessage, 'bot');
+                setTimeout(() => proceedToNextStep(), 1500);
+            } else {
+                alert('정보를 입력해주세요.');
+            }
         }
         
         // 레이블 헬퍼 함수들
