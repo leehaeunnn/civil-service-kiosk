@@ -1106,7 +1106,95 @@
         let conversationContext = {
             history: [],
             lastTopic: null,
-            userData: {}
+            userData: {},
+            lastMentioned: {},
+            
+            // 컨텍스트 해결 함수
+            resolve: function(input) {
+                let resolved = input;
+                
+                // "아까 그거", "그거", "거기" 등 지시어 처리
+                const referencePatterns = [
+                    { pattern: /(아까|방금|좀전에?)\s*(그거|그것|그거?요|말한거)/, type: 'previous_topic' },
+                    { pattern: /(거기|그곳|그\s*곳)/, type: 'location' },
+                    { pattern: /(그때|그\s*때)/, type: 'time' },
+                    { pattern: /(걔|그\s*사람|그분)/, type: 'person' },
+                    { pattern: /(그거?\s*어떻게|그거?\s*뭐|그거?\s*얼마)/, type: 'previous_topic' }
+                ];
+                
+                for (const ref of referencePatterns) {
+                    if (ref.pattern.test(resolved)) {
+                        if (ref.type === 'previous_topic' && this.lastTopic) {
+                            resolved = resolved.replace(ref.pattern, this.lastTopic);
+                        } else if (ref.type === 'location' && this.lastMentioned.location) {
+                            resolved = resolved.replace(ref.pattern, this.lastMentioned.location);
+                        } else if (ref.type === 'time' && this.lastMentioned.time) {
+                            resolved = resolved.replace(ref.pattern, this.lastMentioned.time);
+                        } else if (ref.type === 'person' && this.lastMentioned.person) {
+                            resolved = resolved.replace(ref.pattern, this.lastMentioned.person);
+                        }
+                    }
+                }
+                
+                // "더", "또" 등 추가 요청 처리
+                if (/(더\s*있|또\s*있|그\s*외|다른\s*거)/.test(resolved) && this.lastTopic) {
+                    resolved = this.lastTopic + ' 추가 정보';
+                }
+                
+                return resolved;
+            },
+            
+            // 대화 기록 추가
+            addHistory: function(userInput, botResponse, topic) {
+                this.history.push({
+                    timestamp: new Date(),
+                    user: userInput,
+                    bot: botResponse,
+                    topic: topic
+                });
+                
+                if (topic) {
+                    this.lastTopic = topic;
+                }
+                
+                // 최근 10개만 유지
+                if (this.history.length > 10) {
+                    this.history.shift();
+                }
+                
+                // 언급된 내용 추출
+                this.extractMentions(userInput);
+            },
+            
+            // 언급된 내용 추출
+            extractMentions: function(text) {
+                // 장소 추출
+                const locationMatch = text.match(/(주민센터|구청|시청|동사무소|복지관|병원|은행)/g);
+                if (locationMatch) {
+                    this.lastMentioned.location = locationMatch[0];
+                }
+                
+                // 시간 추출
+                const timeMatch = text.match(/(오늘|내일|모레|이번주|다음주|이번달|다음달)/g);
+                if (timeMatch) {
+                    this.lastMentioned.time = timeMatch[0];
+                }
+                
+                // 서비스/제도 추출
+                const serviceMatch = text.match(/(기초연금|기초생활|긴급복지|주거급여|의료급여|교육급여|생계급여)/g);
+                if (serviceMatch) {
+                    this.lastMentioned.service = serviceMatch[0];
+                }
+            },
+            
+            // 관련 이전 대화 찾기
+            findRelatedHistory: function(topic) {
+                return this.history.filter(h => 
+                    h.topic === topic || 
+                    (h.user && h.user.includes(topic)) ||
+                    (h.bot && h.bot.includes(topic))
+                ).slice(-3); // 최근 3개만
+            }
         };
 
         // API 설정
@@ -1278,13 +1366,125 @@
             }
         }
 
-        // 완벽한 패턴 매칭 시스템
+        // 대화 컨텍스트 관리
+        const conversationContext = {
+            history: [],
+            lastTopic: null,
+            lastMentioned: {},
+            userProfile: {},
+            
+            // 컨텍스트 추가
+            add: function(input, response, topic) {
+                this.history.push({ input, response, topic, timestamp: Date.now() });
+                this.lastTopic = topic;
+                if (this.history.length > 10) this.history.shift(); // 최근 10개만 유지
+            },
+            
+            // 지시어 해석
+            resolve: function(input) {
+                // "아까 그거", "그거", "그건" 등 지시어 처리
+                if (/(아까|방금|그거|그것|그건|저거|이거)/.test(input)) {
+                    if (this.lastTopic) {
+                        return input.replace(/(아까|방금|그거|그것|그건|저거|이거)/g, this.lastTopic);
+                    }
+                }
+                
+                // "거기", "그곳" 등 장소 지시어
+                if (/(거기|그곳|그쪽)/.test(input) && this.lastMentioned.location) {
+                    return input.replace(/(거기|그곳|그쪽)/g, this.lastMentioned.location);
+                }
+                
+                return input;
+            },
+            
+            // 사용자 정보 업데이트
+            updateProfile: function(key, value) {
+                this.userProfile[key] = value;
+            }
+        };
+
+        // 방언 및 구어체 변환기 (강화 버전)
+        const dialectConverter = {
+            convert: function(input) {
+                const conversions = {
+                    // 경상도 방언
+                    '와이라노': '왜 그런가요', '와이그라노': '왜 그런가요', '와그라노': '왜 그런가요',
+                    '머하노': '뭐 하나요', '머하는교': '뭐 하는가요', '뭐하는교': '뭐 하는가요',
+                    '안카나': '안 그런가요', '그카면': '그러면', '그라면': '그러면',
+                    '가가': '가자', '오이소': '오세요', '오소': '오세요',
+                    '머꼬': '뭐', '니가': '네가', '마': '말아',
+                    '아이가': '아니야', '맞나': '맞나요', '가나': '가나요',
+                    '됩니꺼': '됩니까', '했심니꺼': '했습니까',
+                    '카더라': '그렇더라', '카고': '그렇고', '캤다': '그랬다',
+                    
+                    // 전라도 방언
+                    '거시기': '그것', '그려': '그래', '겨': '그래',
+                    '잉': '응', '겁나': '매우', '겁나게': '매우',
+                    '긍게': '그러니까', '아따': '아이고', '근디': '그런데',
+                    '시방': '지금', '징하게': '매우', '억수로': '매우',
+                    '허벌나게': '매우', '참말로': '정말로',
+                    
+                    // 충청도 방언
+                    '기여': '그래', '겨': '그래', '그려': '그래',
+                    '유': '예', '뭐여': '뭐야', '뭐유': '뭐야',
+                    '댜': '다', '슈': '세요', '류': '래요',
+                    
+                    // 제주도 방언
+                    '하영': '많이', '게메': '그럼', '게민': '그러면',
+                    '혼저': '혼자', '놀멍': '놀면서', '곱닥': '예쁘다',
+                    '어멍': '어머니', '아방': '아버지',
+                    
+                    // 강원도 방언
+                    '그랑게': '그러니까', '그래갖고': '그래서',
+                    
+                    // 구어체/속어 변환
+                    '암거나': '아무거나', '머': '뭐', '뭔': '무슨',
+                    '젤': '제일', '맘': '마음', '넘': '너무',
+                    '짱': '매우', '쩐다': '좋다', '쩔어': '대단해',
+                    '대박': '매우 좋다', '헐': '놀랍다', '헉': '놀랍다',
+                    '먹튀': '도망', '개': '매우', '졸라': '매우',
+                    '존나': '매우', 'ㅈㄴ': '매우', '존맛': '매우 맛있다',
+                    '님': '님', '넹': '네', '넵': '네',
+                    'ㅇㅇ': '응', 'ㄴㄴ': '아니', 'ㄱㅅ': '감사',
+                    'ㅈㅅ': '죄송', 'ㅂㅇ': '바이', 'ㅎㅇ': '하이',
+                    
+                    // 노인분들이 자주 쓰는 표현
+                    '쪼매': '조금', '쪼끔': '조금', '쪼금': '조금',
+                    '고것': '그것', '고거': '그것', '요것': '이것',
+                    '저것': '저것', '머시기': '뭐시기', '머시': '뭐시',
+                    '아따매': '아이고', '허이구': '어이구',
+                    
+                    // 줄임말
+                    '걍': '그냥', '맨날': '매일', '막': '마구',
+                    '짜증나': '짜증나', '빡쳐': '화나', '열받아': '화나'
+                };
+                
+                let converted = input;
+                for (const [dialect, standard] of Object.entries(conversions)) {
+                    const regex = new RegExp(`\\b${dialect}\\b`, 'gi');
+                    converted = converted.replace(regex, standard);
+                }
+                
+                // 띄어쓰기 오류 보정
+                converted = converted.replace(/([가-힣])([0-9])/g, '$1 $2');
+                converted = converted.replace(/([0-9])([가-힣])/g, '$1 $2');
+                
+                return converted;
+            }
+        };
+
+        // 완벽한 패턴 매칭 시스템 (확장 버전)
         const patternMatcher = {
             // 모든 가능한 표현 매칭
             match: function(input) {
                 const text = input.toLowerCase().replace(/\s+/g, ' ');
                 
                 // 직접 매칭 패턴들 - 더욱 포괄적으로 확장
+                // 방언 및 구어체 변환
+                const converted = dialectConverter.convert(text);
+                const contextResolved = conversationContext.resolve(converted);
+                const processedText = contextResolved.toLowerCase().replace(/\s+/g, ' ');
+                
                 const patterns = [
                     // 나이 + 돈/지원 - 모든 가능한 표현
                     { regex: /(육십|칠십|팔십|구십|예순|일흔|여든|아흔|나이|노인|어르신|늙은|고령).*(돈|지원|혜택|받|보조|수당|연금|월세|생활비)/, response: 'elderly_financial' },
@@ -1327,7 +1527,42 @@
                     { regex: /(lh|sh|주거|주택).*(신청|자격|조건)/, response: 'housing' },
                     
                     // 여권
-                    { regex: /(여권|패스포트|해외|외국).*(필요|만들|발급|신청)/, response: 'passport' }
+                    { regex: /(여권|패스포트|해외|외국).*(필요|만들|발급|신청)/, response: 'passport' },
+                    
+                    // 추가 패턴들 - 더 많은 일상 표현
+                    // 가족 관련
+                    { regex: /(부모|엄마|아빠|어머니|아버지).*(아프|병원|요양|치매|돌봄)/, response: 'parent_care' },
+                    { regex: /(자녀|아들|딸|애들).*(학교|교육|학비|급식)/, response: 'education' },
+                    { regex: /(결혼|혼인|신혼).*(지원|대출|주택)/, response: 'marriage' },
+                    
+                    // 재난/재해
+                    { regex: /(홍수|태풍|지진|화재|재난).*(피해|지원|보상)/, response: 'disaster' },
+                    { regex: /(코로나|전염병|격리).*(지원|생활비|치료)/, response: 'pandemic' },
+                    
+                    // 교통/차량
+                    { regex: /(운전|면허|차|자동차).*(취득|갱신|등록|세금)/, response: 'vehicle' },
+                    { regex: /(주차|벌금|과태료).*(할인|감면|이의)/, response: 'traffic_fine' },
+                    
+                    // 세금/공과금
+                    { regex: /(세금|재산세|소득세|종합소득).*(신고|납부|감면)/, response: 'tax' },
+                    { regex: /(전기|가스|수도|관리비).*(지원|할인|체납)/, response: 'utility' },
+                    
+                    // 법률/민원
+                    { regex: /(소송|고소|신고|민원).*(방법|절차|도움)/, response: 'legal' },
+                    { regex: /(이혼|양육|친권|위자료)/, response: 'divorce' },
+                    
+                    // 창업/사업
+                    { regex: /(창업|사업|가게|장사).*(지원|대출|자금|허가)/, response: 'business' },
+                    { regex: /(폐업|부도|파산|회생)/, response: 'bankruptcy' },
+                    
+                    // 군대/병역
+                    { regex: /(군대|입대|병역|예비군).*(연기|면제|편입)/, response: 'military' },
+                    { regex: /(보훈|유공자|참전).*(혜택|지원|등록)/, response: 'veteran' },
+                    
+                    // 애매한 표현들
+                    { regex: /(도와|도움|어떻게|어떡|몰라|모르).*(주|받|줘)/, response: 'help_general' },
+                    { regex: /(돈.*(필요|급해|없|떨어))/, response: 'financial_emergency' },
+                    { regex: /(어디|어디서|어디로).*(가야|찾|물어)/, response: 'location_inquiry' }
                 ];
                 
                 for (const pattern of patterns) {
@@ -1620,6 +1855,194 @@ LH 콜센터: 1600-1004`,
 • 긴급여권: 1일 발급 (1년만 유효)
 
 여권사진은 6개월 이내 촬영한 것만 가능해요!`,
+                    
+                    // 추가 응답 타입들 
+                    parent_care: `부모님 돌봄 지원 안내입니다 🏺
+
+<strong>🏞️ 장기요양급여</strong>
+• 노인장기요양보험 통해 지원
+• 등급별 월 60~240만원  
+• 신청: 국민건강보험공단
+
+<strong>👥 노인돌봄서비스</strong>
+• 방문요양, 주간보호 등
+• 전화: 1899-9988`,
+                    
+                    education: `자녀 교육 지원 정보입니다 🏫
+
+<strong>📚 교육비 지원</strong>
+• 교육급여: 초중고 학비 지원
+• 교육바우처: 방과후 학원 지원`,
+                    
+                    marriage: `신혼부부 지원 안내입니다 💍
+
+<strong>🏠 주거 지원</strong>
+• 신혼부부 행복주택
+• 신혼부부 전세자금 대출`,
+                    
+                    disaster: `재난피해 지원 안내입니다 🌊
+
+<strong>🆘 긴급지원</strong>
+• 생계비: 월 162만원(4인기준)
+• 의료비: 300만원 한도`,
+                    
+                    pandemic: `감염병 관련 지원 안내입니다 😷
+
+<strong>💵 생활지원금</strong>
+• 격리자 생활지원금
+• 치료비 지원`,
+                    
+                    vehicle: `차량 관련 정보입니다 🚗
+
+<strong>📄 면허 취득/갱신</strong>
+• 운전면허시험장
+• 온라인 갱신 가능`,
+                    
+                    traffic_fine: `교통 벌금/과태료 안내입니다 🚦
+
+<strong>💸 벌금 감경</strong>
+• 기초생활수급자: 50%
+• 조기납부: 20%`,
+                    
+                    traffic_accident: `교통사고 처리 안내입니다 🚑
+
+<strong>🚨 사고 접수</strong>
+• 경찰: 112
+• 보험사 신고`,
+                    
+                    tax: `세금 관련 정보입니다 📊
+
+<strong>📅 세금 신고</strong>
+• 종합소득세: 5월
+• 홈택스: www.hometax.go.kr`,
+                    
+                    telecom: `통신비 지원 안내입니다 📱
+
+<strong>📞 요금 감면</strong>
+• 기초생활수급자: 50%
+• 차상위계층: 35%`,
+                    
+                    utility: `공과금 지원 안내입니다 💡
+
+<strong>⚡ 전기료 할인</strong>
+• 기초생활수급자: 50%
+• 차상위계층: 30%`,
+                    
+                    legal: `법률 지원 안내입니다 ⚖️
+
+<strong>👨‍⚖️ 무료 법률 상담</strong>
+• 대한법률구조공단: 132`,
+                    
+                    divorce: `이혼 관련 지원 안내입니다 💔
+
+<strong>👨‍👩‍👧 양육 지원</strong>
+• 양육비 산정 기준
+• 한부모 가족 지원`,
+                    
+                    fraud: `사기 피해 대응 안내입니다 🚨
+
+<strong>📞 신고처</strong>
+• 경찰: 112
+• 금융감독원: 1332`,
+                    
+                    violence: `폭력 피해 지원 안내입니다 🆘
+
+<strong>🚨 긴급 신고</strong>
+• 경찰: 112
+• 여성긴급전화: 1366`,
+                    
+                    business: `창업/사업 지원 안내입니다 💼
+
+<strong>💰 창업 자금</strong>
+• 청년창업자금: 최대 1억
+• 소상공인 정책자금`,
+                    
+                    franchise: `프랜차이즈 창업 안내입니다 🏢
+
+<strong>📊 정보공개서 확인</strong>
+• 가맹본부 정보 확인
+• franchise.ftc.go.kr`,
+                    
+                    bankruptcy: `파산/회생 지원 안내입니다 🆘
+
+<strong>🏦 개인회생</strong>
+• 빚 탕감/조정
+• 신용회복위원회: 1600-5500`,
+                    
+                    military: `병역 관련 정보입니다 🎖️
+
+<strong>👨‍✈️ 입영 연기</strong>
+• 대학 재학
+• 병무청: 1588-9090`,
+                    
+                    public_service: `공익근무 안내입니다 🆘
+
+<strong>👨‍🏫 사회복무요원</strong>
+• 병역 대체복무
+• 문의: 병무청 1588-9090`,
+                    
+                    veteran: `보훈 지원 안내입니다 🎆
+
+<strong>💵 보훈 수당</strong>
+• 참전명예수당
+• 보훈처: 1577-0606`,
+                    
+                    contact_inquiry: `상담 연락처 안내입니다 📞
+
+<strong>🆘 긴급 연락처</strong>
+• 보건복지상담: 129
+• 경찰: 112`,
+                    
+                    help_general: `무엇을 도와드릴까요? 🤗
+
+주요 민원 서비스:
+• 기초연금 신청
+• 기초생활수급 신청
+
+구체적으로 어떤 도움이 필요하신가요?`,
+                    
+                    financial_emergency: `긴급 생계 지원 안내입니다 🆘
+
+<strong>🚨 긴급복지지원제도</strong>
+• 생계비: 월 162만원(4인)
+• 즉시 신청: 129`,
+                    
+                    location_inquiry: `민원 처리 장소 안내입니다 📍
+
+<strong>🏢 주민센터</strong>
+• 평일 09:00-18:00
+• 가까운 기관: www.gov.kr`,
+                    
+                    office_hours: `기관 운영시간 안내입니다 🕰️
+
+<strong>🏢 주민센터</strong>
+• 평일: 09:00 - 18:00`,
+                    
+                    fee_inquiry: `서류 발급 수수료 안내입니다 💵
+
+<strong>📝 주민등록등본</strong>
+• 발급: 400원`,
+                    
+                    eligibility: `지원 자격 확인 방법입니다 🎯
+
+<strong>🔍 복지로</strong>
+• www.bokjiro.go.kr`,
+                    
+                    application_method: `신청 방법 안내입니다 📋
+
+<strong>🌐 온라인 신청</strong>
+• 정부24: www.gov.kr`,
+                    
+                    processing_time: `민원 처리 기간 안내입니다 ⏱️
+
+<strong>📄 즉시 처리</strong>
+• 주민등록등본`,
+                    
+                    elderly_medical: `어르신 의료 지원 안내입니다 🏥
+
+<strong>💊 노인 의료비 지원</strong>
+• 65세 이상 의료급여
+• 보건소: 1899-0668`,
 
                     default: `무엇을 도와드릴까요? 😊
 
