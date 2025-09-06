@@ -2601,10 +2601,10 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
             if (situation === 'pension' || situation === 'senior-job' || situation === 'welfare') {
                 // 노인 관련 서비스
                 html += `
-                    <h4>💰 소듍 수준</h4>
+                    <h4>💰 소득 수준</h4>
                     <label class="detail-option">
                         <input type="radio" name="income" value="low" onchange="updateCondition('income', 'low')">
-                        소듍하위 70% (기초연금 대상)
+                        소득하위 70% (기초연금 대상)
                     </label>
                     <label class="detail-option">
                         <input type="radio" name="income" value="very-low" onchange="updateCondition('income', 'very-low')">
@@ -2612,7 +2612,7 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                     </label>
                     <label class="detail-option">
                         <input type="radio" name="income" value="middle" onchange="updateCondition('income', 'middle')">
-                        중위소듍 이상
+                        중위소득 이상
                     </label>
                     
                     <h4 style="margin-top:15px;">🏠 가구 형태</h4>
@@ -2645,10 +2645,10 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                         재직중
                     </label>
                     
-                    <h4 style="margin-top:15px;">💵 소듍 수준</h4>
+                    <h4 style="margin-top:15px;">💵 소득 수준</h4>
                     <label class="detail-option">
                         <input type="checkbox" onchange="updateCondition('low-income', this.checked)">
-                        중위소듍 150% 이하
+                        중위소득 150% 이하
                     </label>
                     <label class="detail-option">
                         <input type="checkbox" onchange="updateCondition('first-job', this.checked)">
@@ -2700,7 +2700,7 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                     </label>
                     <label class="detail-option">
                         <input type="checkbox" onchange="updateCondition('emergency-income', this.checked)">
-                        소듍 상실
+                        소득 상실
                     </label>
                     <label class="detail-option">
                         <input type="checkbox" onchange="updateCondition('emergency-disaster', this.checked)">
@@ -2709,18 +2709,18 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
             } else {
                 // 기타 모든 상황에 대한 기본 선택
                 html += `
-                    <h4>💰 가구 소듍</h4>
+                    <h4>💰 가구 소득</h4>
                     <label class="detail-option">
                         <input type="radio" name="income" value="low" onchange="updateCondition('income', 'low')">
-                        저소듍층 (중위소듍 50% 이하)
+                        저소득층 (중위소득 50% 이하)
                     </label>
                     <label class="detail-option">
                         <input type="radio" name="income" value="middle" onchange="updateCondition('income', 'middle')">
-                        중소듍층
+                        중소득층
                     </label>
                     <label class="detail-option">
                         <input type="radio" name="income" value="high" onchange="updateCondition('income', 'high')">
-                        일반 소듍
+                        일반 소득
                     </label>
                     
                     <h4 style="margin-top:15px;">🏠 가구 형태</h4>
@@ -2988,7 +2988,7 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                     icon: '🏥',
                     description: '의료비 부담 경감',
                     amount: '본인부담금 대폭 경감',
-                    eligibility: '중위소듍 40% 이하'
+                    eligibility: '중위소득 40% 이하'
                 });
             }
             
@@ -3012,7 +3012,7 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                     icon: '🏡',
                     description: '임차료 또는 수선유지비 지원',
                     amount: '지역/가구수별 차등',
-                    eligibility: '중위소듍 48% 이하'
+                    eligibility: '중위소득 48% 이하'
                 });
             }
             
