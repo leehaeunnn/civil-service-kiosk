@@ -3274,78 +3274,78 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                     message += '</button>';
                     message += '</div>';
                 } else if (step.action === 'booking') {
-                    message += `<div style="margin-top: 15px;">
-                               <label style="display: block; margin-bottom: 5px;">방문 날짜:</label>
-                               <input type="date" id="bookingDate" style="padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                               <label style="display: block; margin-bottom: 5px;">방문 시간:</label>
-                               <select id="bookingTime" style="padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                                 <option value="">시간 선택</option>
-                                 <option value="09:00">오전 9:00</option>
-                                 <option value="10:00">오전 10:00</option>
-                                 <option value="11:00">오전 11:00</option>
-                                 <option value="14:00">오후 2:00</option>
-                                 <option value="15:00">오후 3:00</option>
-                                 <option value="16:00">오후 4:00</option>
-                               </select>
-                               <button onclick="bookAndProceed()" 
-                                     style="display: block; margin-top: 10px; padding: 10px 20px; background: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                                     📅 예약하기 → 다음 단계
-                               </button>
-                             </div>`;
+                    message += '<div style="margin-top: 15px;">';
+                    message += '<label style="display: block; margin-bottom: 5px;">방문 날짜:</label>';
+                    message += '<input type="date" id="bookingDate" style="padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">';
+                    message += '<label style="display: block; margin-bottom: 5px;">방문 시간:</label>';
+                    message += '<select id="bookingTime" style="padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">';
+                    message += '<option value="">시간 선택</option>';
+                    message += '<option value="09:00">오전 9:00</option>';
+                    message += '<option value="10:00">오전 10:00</option>';
+                    message += '<option value="11:00">오전 11:00</option>';
+                    message += '<option value="14:00">오후 2:00</option>';
+                    message += '<option value="15:00">오후 3:00</option>';
+                    message += '<option value="16:00">오후 4:00</option>';
+                    message += '</select>';
+                    message += '<button onclick="bookAndProceed()" ';
+                    message += 'style="display: block; margin-top: 10px; padding: 10px 20px; background: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">';
+                    message += '📅 예약하기 → 다음 단계';
+                    message += '</button>';
+                    message += '</div>';
                 } else if (step.action === 'custom-input') {
-                    message += `<div style="margin-top: 15px;">
-                               <textarea id="customServiceInput" placeholder="예: 여권 재발급, 혼인신고, 사업자등록 등" 
-                                      style="width: 100%; padding: 10px; height: 80px; border: 1px solid #ddd; border-radius: 5px; resize: vertical;"></textarea>
-                               <button onclick="saveCustomServiceAndProceed()" 
-                                     style="margin-top: 10px; padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                                     💾 저장하고 다음 단계로 →
-                               </button>
-                             </div>`;
+                    message += '<div style="margin-top: 15px;">';
+                    message += '<textarea id="customServiceInput" placeholder="예: 여권 재발급, 혼인신고, 사업자등록 등" ';
+                    message += 'style="width: 100%; padding: 10px; height: 80px; border: 1px solid #ddd; border-radius: 5px; resize: vertical;"></textarea>';
+                    message += '<button onclick="saveCustomServiceAndProceed()" ';
+                    message += 'style="margin-top: 10px; padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">';
+                    message += '💾 저장하고 다음 단계로 →';
+                    message += '</button>';
+                    message += '</div>';
                 } else if (step.action === 'custom-form') {
-                    message += `<div style="margin-top: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                               <div style="margin-bottom: 10px;">
-                                 <label style="display: block; margin-bottom: 5px;">추가 정보나 질문사항:</label>
-                                 <textarea id="customInfoInput" placeholder="필요한 정보나 궁금한 점을 자유롭게 입력해주세요" 
-                                          style="width: 100%; padding: 8px; height: 100px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
-                               </div>
-                               <div style="margin-bottom: 10px;">
-                                 <label style="display: block; margin-bottom: 5px;">연락처 (선택):</label>
-                                 <input type="tel" id="customContact" placeholder="010-0000-0000" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                               </div>
-                               <button onclick="submitCustomInfoAndProceed()" 
-                                     style="margin-top: 10px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                                     📝 정보 제출 → 다음 단계
-                               </button>
-                             </div>`;
+                    message += '<div style="margin-top: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px;">';
+                    message += '<div style="margin-bottom: 10px;">';
+                    message += '<label style="display: block; margin-bottom: 5px;">추가 정보나 질문사항:</label>';
+                    message += '<textarea id="customInfoInput" placeholder="필요한 정보나 궁금한 점을 자유롭게 입력해주세요" ';
+                    message += 'style="width: 100%; padding: 8px; height: 100px; border: 1px solid #ddd; border-radius: 4px;"></textarea>';
+                    message += '</div>';
+                    message += '<div style="margin-bottom: 10px;">';
+                    message += '<label style="display: block; margin-bottom: 5px;">연락처 (선택):</label>';
+                    message += '<input type="tel" id="customContact" placeholder="010-0000-0000" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">';
+                    message += '</div>';
+                    message += '<button onclick="submitCustomInfoAndProceed()" ';
+                    message += 'style="margin-top: 10px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">';
+                    message += '📝 정보 제출 → 다음 단계';
+                    message += '</button>';
+                    message += '</div>';
                 } else if (step.action === 'custom-guide') {
                     const customService = localStorage.getItem('customService') || '입력하신 서비스';
-                    message += `<div style="margin-top: 15px; background: #e3f2fd; padding: 15px; border-radius: 8px;">
-                               <h4>📌 ${customService} 신청 방법</h4>
-                               <p style="margin-top: 10px;">입력하신 내용을 바탕으로 안내해드립니다:</p>
-                               <ol style="margin-top: 10px; padding-left: 20px;">
-                                 <li>가까운 주민센터 또는 구청 방문</li>
-                                 <li>정부24(www.gov.kr)에서 온라인 신청 확인</li>
-                                 <li>필요 서류: 신분증, 관련 증빙서류</li>
-                                 <li>콜센터 문의: 110 (정부민원안내)</li>
-                               </ol>
-                               <button onclick="proceedToNextStep()" 
-                                     style="margin-top: 15px; padding: 10px 20px; background: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                                     확인했어요 → 다음 단계
-                               </button>
-                             </div>`;
+                    message += '<div style="margin-top: 15px; background: #e3f2fd; padding: 15px; border-radius: 8px;">';
+                    message += '<h4>📌 ' + customService + ' 신청 방법</h4>';
+                    message += '<p style="margin-top: 10px;">입력하신 내용을 바탕으로 안내해드립니다:</p>';
+                    message += '<ol style="margin-top: 10px; padding-left: 20px;">';
+                    message += '<li>가까운 주민센터 또는 구청 방문</li>';
+                    message += '<li>정부24(www.gov.kr)에서 온라인 신청 확인</li>';
+                    message += '<li>필요 서류: 신분증, 관련 증빙서류</li>';
+                    message += '<li>콜센터 문의: 110 (정부민원안내)</li>';
+                    message += '</ol>';
+                    message += '<button onclick="proceedToNextStep()" ';
+                    message += 'style="margin-top: 15px; padding: 10px 20px; background: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">';
+                    message += '확인했어요 → 다음 단계';
+                    message += '</button>';
+                    message += '</div>';
                 } else if (step.action === 'complete') {
-                    message += `<div style="margin-top: 15px; background: #d4edda; padding: 20px; border-radius: 10px; text-align: center;">
-                               <div style="font-size: 3em; margin-bottom: 10px;">🎉</div>
-                               <div style="font-size: 1.2em; font-weight: bold; color: #155724;">신청 준비가 모두 완료되었습니다!</div>
-                               <button onclick="showSummary()" 
-                                     style="margin-top: 15px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                                     📋 신청 내용 확인하기
-                               </button>
-                               <button onclick="startNewApplication()" 
-                                     style="margin-top: 10px; margin-left: 10px; padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                                     🔄 새로운 신청 시작
-                               </button>
-                             </div>`;
+                    message += '<div style="margin-top: 15px; background: #d4edda; padding: 20px; border-radius: 10px; text-align: center;">';
+                    message += '<div style="font-size: 3em; margin-bottom: 10px;">🎉</div>';
+                    message += '<div style="font-size: 1.2em; font-weight: bold; color: #155724;">신청 준비가 모두 완료되었습니다!</div>';
+                    message += '<button onclick="showSummary()" ';
+                    message += 'style="margin-top: 15px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">';
+                    message += '📋 신청 내용 확인하기';
+                    message += '</button>';
+                    message += '<button onclick="startNewApplication()" ';
+                    message += 'style="margin-top: 10px; margin-left: 10px; padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">';
+                    message += '🔄 새로운 신청 시작';
+                    message += '</button>';
+                    message += '</div>';
                 } else {
                     // 기본 다음 버튼
                     message += '<div style="margin-top: 15px;">';
