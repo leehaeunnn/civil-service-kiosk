@@ -3227,52 +3227,52 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                 
                 // 액션 버튼 추가
                 if (step.action === 'checklist') {
-                    message += `<div style="margin-top: 15px;">
-                               <label style="display: block; margin: 8px 0;">
-                                 <input type="checkbox" id="doc1"> 신분증
-                               </label>
-                               <label style="display: block; margin: 8px 0;">
-                                 <input type="checkbox" id="doc2"> 통장사본
-                               </label>
-                               <label style="display: block; margin: 8px 0;">
-                                 <input type="checkbox" id="doc3"> 소득·재산 신고서
-                               </label>
-                               <label style="display: block; margin: 8px 0;">
-                                 <input type="checkbox" id="doc4"> 전월세 계약서 (해당자)
-                               </label>
-                               <button onclick="proceedToNextStep()" 
-                                     style="margin-top: 10px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                                     ✅ 모두 준비했어요 → 다음 단계
-                               </button>
-                             </div>`;
+                    message += '<div style="margin-top: 15px;">';
+                    message += '<label style="display: block; margin: 8px 0;">';
+                    message += '<input type="checkbox" id="doc1"> 신분증';
+                    message += '</label>';
+                    message += '<label style="display: block; margin: 8px 0;">';
+                    message += '<input type="checkbox" id="doc2"> 통장사본';
+                    message += '</label>';
+                    message += '<label style="display: block; margin: 8px 0;">';
+                    message += '<input type="checkbox" id="doc3"> 소득·재산 신고서';
+                    message += '</label>';
+                    message += '<label style="display: block; margin: 8px 0;">';
+                    message += '<input type="checkbox" id="doc4"> 전월세 계약서 (해당자)';
+                    message += '</label>';
+                    message += '<button onclick="proceedToNextStep()" ';
+                    message += 'style="margin-top: 10px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">';
+                    message += '✅ 모두 준비했어요 → 다음 단계';
+                    message += '</button>';
+                    message += '</div>';
                 } else if (step.action === 'location') {
-                    message += `<div style="margin-top: 15px;">
-                               <input type="text" id="locationInput" placeholder="예: 서울시 강남구" 
-                                      style="padding: 10px; width: 60%; margin-right: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                               <button onclick="findLocationAndProceed()" 
-                                     style="padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                                     🔍 주민센터 찾기
-                               </button>
-                             </div>`;
+                    message += '<div style="margin-top: 15px;">';
+                    message += '<input type="text" id="locationInput" placeholder="예: 서울시 강남구" ';
+                    message += 'style="padding: 10px; width: 60%; margin-right: 10px; border: 1px solid #ddd; border-radius: 5px;">';
+                    message += '<button onclick="findLocationAndProceed()" ';
+                    message += 'style="padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">';
+                    message += '🔍 주민센터 찾기';
+                    message += '</button>';
+                    message += '</div>';
                 } else if (step.action === 'form') {
-                    message += `<div style="margin-top: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                               <div style="margin-bottom: 10px;">
-                                 <label style="display: block; margin-bottom: 5px;">이름:</label>
-                                 <input type="text" id="formName" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                               </div>
-                               <div style="margin-bottom: 10px;">
-                                 <label style="display: block; margin-bottom: 5px;">주민등록번호:</label>
-                                 <input type="text" id="formSSN" placeholder="예: 123456-1234567" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                               </div>
-                               <div style="margin-bottom: 10px;">
-                                 <label style="display: block; margin-bottom: 5px;">주소:</label>
-                                 <input type="text" id="formAddress" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                               </div>
-                               <button onclick="submitFormAndProceed()" 
-                                     style="margin-top: 10px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                                     📝 작성 완료 → 다음 단계
-                               </button>
-                             </div>`;
+                    message += '<div style="margin-top: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px;">';
+                    message += '<div style="margin-bottom: 10px;">';
+                    message += '<label style="display: block; margin-bottom: 5px;">이름:</label>';
+                    message += '<input type="text" id="formName" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">';
+                    message += '</div>';
+                    message += '<div style="margin-bottom: 10px;">';
+                    message += '<label style="display: block; margin-bottom: 5px;">주민등록번호:</label>';
+                    message += '<input type="text" id="formSSN" placeholder="예: 123456-1234567" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">';
+                    message += '</div>';
+                    message += '<div style="margin-bottom: 10px;">';
+                    message += '<label style="display: block; margin-bottom: 5px;">주소:</label>';
+                    message += '<input type="text" id="formAddress" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">';
+                    message += '</div>';
+                    message += '<button onclick="submitFormAndProceed()" ';
+                    message += 'style="margin-top: 10px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">';
+                    message += '📝 작성 완료 → 다음 단계';
+                    message += '</button>';
+                    message += '</div>';
                 } else if (step.action === 'booking') {
                     message += `<div style="margin-top: 15px;">
                                <label style="display: block; margin-bottom: 5px;">방문 날짜:</label>
@@ -3348,20 +3348,20 @@ A: 네, 어르신! 62세시면 받으실 수 있는 지원이 여러 가지 있�
                              </div>`;
                 } else {
                     // 기본 다음 버튼
-                    message += `<div style="margin-top: 15px;">
-                               <button onclick="proceedToNextStep()" 
-                                     style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                                     다음 단계로 →
-                               </button>
-                             </div>`;
+                    message += '<div style="margin-top: 15px;">';
+                    message += '<button onclick="proceedToNextStep()" ';
+                    message += 'style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">';
+                    message += '다음 단계로 →';
+                    message += '</button>';
+                    message += '</div>';
                 }
                 
                 // 이전 단계 버튼 (첫 단계가 아닌 경우)
                 if (index > 0) {
-                    message += `<button onclick="goToPreviousStep()" 
-                                   style="margin-top: 10px; padding: 8px 16px; background: #e0e0e0; color: #666; border: none; border-radius: 5px; cursor: pointer;">
-                                   ← 이전 단계
-                               </button>`;
+                    message += '<button onclick="goToPreviousStep()" ';
+                    message += 'style="margin-top: 10px; padding: 8px 16px; background: #e0e0e0; color: #666; border: none; border-radius: 5px; cursor: pointer;">';
+                    message += '← 이전 단계';
+                    message += '</button>';
                 }
                 
                 addChatMessage(message, 'bot');
