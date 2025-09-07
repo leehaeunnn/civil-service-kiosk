@@ -927,7 +927,7 @@
                 <button class="api-settings-btn" onclick="testVoice()" style="background: #ffeaa7; color: #d63031; font-size: 1em; font-weight: bold; border: none; padding: 10px 15px;" title="음성 테스트">
                     🎤 테스트
                 </button>
-                <button class="api-settings-btn" onclick="showAPIModal()" style="background: white; color: #667eea; font-size: 1em; font-weight: bold; border: none;">
+                <button class="api-settings-btn" onclick="console.log('버튼 클릭됨'); showAPIModal();" style="background: white; color: #667eea; font-size: 1em; font-weight: bold; border: none; padding: 10px 15px; cursor: pointer;">
                     ⚙️ API 설정
                 </button>
             </div>
@@ -1095,6 +1095,417 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // 전역 변수들을 먼저 정의
+        window.userProfile = {
+            age: null,
+            situation: null,
+            conditions: []
+        };
+
+        // 전역 함수들을 먼저 정의
+        window.showAPIModal = function() {
+            console.log('showAPIModal 함수 호출됨');
+            const modal = document.getElementById('apiModal');
+            if (!modal) {
+                console.error('API 모달을 찾을 수 없습니다!');
+                return;
+            }
+            modal.classList.add('active');
+            if (typeof apiConfig !== 'undefined') {
+                document.getElementById('apiProvider').value = apiConfig.provider || '';
+                document.getElementById('apiKey').value = apiConfig.apiKey || '';
+                document.getElementById('localEndpoint').value = apiConfig.localSLMEndpoint || 'http://localhost:8080/v1/chat/completions';
+                document.getElementById('hybridMode').checked = apiConfig.useHybrid !== false;
+                if (typeof ragConfig !== 'undefined') {
+                    document.getElementById('ragEnabled').checked = ragConfig.enabled !== false;
+                }
+            }
+            if (typeof updateAPIStatus === 'function') {
+                updateAPIStatus();
+            }
+        }
+
+        window.closeAPIModal = function() {
+            const modal = document.getElementById('apiModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        window.saveAPISettings = function() {
+            const provider = document.getElementById('apiProvider').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const localEndpoint = document.getElementById('localEndpoint').value;
+            const hybridMode = document.getElementById('hybridMode').checked;
+            const ragEnabled = document.getElementById('ragEnabled').checked;
+            
+            // apiConfig가 정의되어 있으면 업데이트
+            if (typeof apiConfig !== 'undefined') {
+                apiConfig.provider = provider;
+                apiConfig.apiKey = apiKey;
+                apiConfig.localSLMEndpoint = localEndpoint;
+                apiConfig.useHybrid = hybridMode;
+                apiConfig.useAPI = (provider && (provider === 'local' || apiKey));
+            }
+            
+            if (typeof ragConfig !== 'undefined') {
+                ragConfig.enabled = ragEnabled;
+            }
+            
+            // 설정 저장
+            localStorage.setItem('apiProvider', provider);
+            localStorage.setItem('apiKey', apiKey);
+            localStorage.setItem('localSLMEndpoint', localEndpoint);
+            localStorage.setItem('useHybrid', hybridMode);
+            localStorage.setItem('ragEnabled', ragEnabled);
+            
+            // 상태 업데이트
+            window.updateAPIStatus();
+            
+            // UI 업데이트
+            const statusText = document.getElementById('statusText');
+            if (statusText) {
+                if (provider && (provider === 'local' || apiKey)) {
+                    let modeName = provider === 'openai' ? 'OpenAI' : 
+                                  provider === 'google' ? 'Google AI' :
+                                  provider === 'local' ? '로컬 SLM' : '하이브리드 AI';
+                    statusText.textContent = `${modeName} 모드`;
+                } else {
+                    statusText.textContent = '로컬 AI 모드';
+                }
+            }
+            
+            alert('API 설정이 저장되었습니다!');
+            window.closeAPIModal();
+        }
+
+        window.updateAPIStatus = function() {
+            const status = document.getElementById('apiStatus');
+            const provider = document.getElementById('apiProvider').value;
+            const apiKeyGroup = document.getElementById('apiKeyGroup');
+            const localEndpointGroup = document.getElementById('localEndpointGroup');
+            
+            if (!status) return;
+            
+            // UI 업데이트
+            if (provider === 'local') {
+                if (apiKeyGroup) apiKeyGroup.style.display = 'none';
+                if (localEndpointGroup) localEndpointGroup.style.display = 'block';
+                status.className = 'api-status active';
+                status.textContent = '로컬 SLM 모드 활성화';
+            } else if (provider) {
+                if (apiKeyGroup) apiKeyGroup.style.display = 'block';
+                if (localEndpointGroup) localEndpointGroup.style.display = 'none';
+                if (document.getElementById('apiKey').value) {
+                    status.className = 'api-status active';
+                    status.textContent = `${provider === 'openai' ? 'OpenAI GPT-4' : 'Google Gemini'} 연결됨`;
+                } else {
+                    status.className = 'api-status inactive';
+                    status.textContent = 'API Key를 입력하세요';
+                }
+            } else {
+                if (apiKeyGroup) apiKeyGroup.style.display = 'none';
+                if (localEndpointGroup) localEndpointGroup.style.display = 'none';
+                status.className = 'api-status inactive';
+                status.textContent = '현재 로컬 AI 모드로 작동중';
+            }
+        }
+
+        // Step 관련 함수들
+        window.selectAgeStep = function(age) {
+            window.userProfile.age = age;
+            
+            // 버튼 스타일 업데이트
+            document.querySelectorAll('[data-age]').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            if (event && event.target) {
+                event.target.classList.add('selected');
+            }
+            
+            // 다음 버튼 활성화
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        window.previousStep = function() {
+            const activeStep = document.querySelector('.step.active');
+            if (!activeStep) {
+                console.error('No active step found');
+                return;
+            }
+            const currentStep = parseInt(activeStep.dataset.step);
+            if (currentStep > 1) {
+                const currentStepEl = document.querySelector(`.step[data-step="${currentStep}"]`);
+                const prevStepEl = document.querySelector(`.step[data-step="${currentStep - 1}"]`);
+                if (currentStepEl) currentStepEl.classList.remove('active');
+                if (prevStepEl) prevStepEl.classList.add('active');
+                
+                const nextBtn = document.getElementById('nextBtn');
+                const backBtn = document.getElementById('backBtn');
+                if (nextBtn) nextBtn.disabled = (currentStep - 1) === 1 && !window.userProfile.age;
+                if (backBtn) backBtn.disabled = (currentStep - 1) === 1;
+            }
+        }
+
+        window.nextStep = function() {
+            const activeStep = document.querySelector('.step.active');
+            if (!activeStep) {
+                console.error('No active step found');
+                return;
+            }
+            const currentStep = parseInt(activeStep.dataset.step);
+            if (currentStep < 3) {
+                const currentStepEl = document.querySelector(`.step[data-step="${currentStep}"]`);
+                const nextStepEl = document.querySelector(`.step[data-step="${currentStep + 1}"]`);
+                if (currentStepEl) currentStepEl.classList.remove('active');
+                if (nextStepEl) nextStepEl.classList.add('active');
+                
+                const backBtn = document.getElementById('backBtn');
+                const nextBtn = document.getElementById('nextBtn');
+                if (backBtn) backBtn.disabled = false;
+                if (nextBtn) nextBtn.disabled = (currentStep + 1) === 3;
+                
+                if (currentStep + 1 === 3) {
+                    if (typeof window.generateResult === 'function') {
+                        window.generateResult();
+                    }
+                }
+            }
+        }
+
+        window.selectSituation = function(situation) {
+            window.userProfile.situation = situation;
+            
+            // 버튼 스타일 업데이트
+            document.querySelectorAll('.situation-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+        }
+
+        window.toggleCondition = function(condition) {
+            const index = window.userProfile.conditions.indexOf(condition);
+            if (index > -1) {
+                window.userProfile.conditions.splice(index, 1);
+                if (event && event.target) event.target.classList.remove('selected');
+            } else {
+                window.userProfile.conditions.push(condition);
+                if (event && event.target) event.target.classList.add('selected');
+            }
+        }
+
+        // Custom input 함수들
+        window.showCustomAgeInput = function() {
+            const input = prompt('나이를 입력해주세요:');
+            if (input && !isNaN(input)) {
+                const age = parseInt(input);
+                if (age > 0 && age < 150) {
+                    window.selectAgeStep(age);
+                } else {
+                    alert('올바른 나이를 입력해주세요 (1-149)');
+                }
+            }
+        }
+
+        window.showCustomSituationInput = function() {
+            const input = prompt('현재 상황을 입력해주세요:');
+            if (input && input.trim()) {
+                window.userProfile.situation = input.trim();
+                // 버튼 스타일 업데이트
+                document.querySelectorAll('.situation-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                event.target.classList.add('selected');
+            }
+        }
+
+        window.showCustomConditionInput = function() {
+            const input = prompt('추가 조건을 입력해주세요:');
+            if (input && input.trim()) {
+                window.userProfile.conditions.push(input.trim());
+                if (event && event.target) event.target.classList.add('selected');
+            }
+        }
+
+        window.generateResult = function() {
+            const result = document.getElementById('result');
+            if (!result) return;
+            
+            let message = '<h3>🎯 맞춤 추천 결과</h3>';
+            const profile = window.userProfile;
+            
+            if (profile.age >= 65) {
+                message += '<p><strong>✅ 기초연금</strong><br>만 65세 이상 어르신 대상 월 최대 33만원 지원</p>';
+            }
+            
+            if (profile.situation === '실직' || profile.situation === '구직중') {
+                message += '<p><strong>✅ 실업급여</strong><br>고용보험 가입 이력이 있으시면 신청 가능</p>';
+                message += '<p><strong>✅ 국민취업지원제도</strong><br>구직촉진수당 월 50만원 + 취업지원서비스</p>';
+            }
+            
+            if (profile.conditions.includes('저소득')) {
+                message += '<p><strong>✅ 기초생활수급</strong><br>생계/의료/주거/교육 급여 지원</p>';
+            }
+            
+            if (profile.conditions.includes('장애')) {
+                message += '<p><strong>✅ 장애인연금</strong><br>중증장애인 대상 월 최대 40만원</p>';
+            }
+            
+            result.innerHTML = message;
+        }
+
+        window.initializeSystem = function() {
+            // 저장된 설정 로드
+            if (typeof apiConfig !== 'undefined') {
+                const savedProvider = localStorage.getItem('apiProvider');
+                const savedApiKey = localStorage.getItem('apiKey');
+                const savedEndpoint = localStorage.getItem('localSLMEndpoint');
+                const savedHybrid = localStorage.getItem('useHybrid');
+                const savedRAG = localStorage.getItem('ragEnabled');
+                
+                if (savedProvider) apiConfig.provider = savedProvider;
+                if (savedApiKey) apiConfig.apiKey = savedApiKey;
+                if (savedEndpoint) apiConfig.localSLMEndpoint = savedEndpoint;
+                if (savedHybrid !== null) apiConfig.useHybrid = savedHybrid !== 'false';
+                if (typeof ragConfig !== 'undefined' && savedRAG !== null) {
+                    ragConfig.enabled = savedRAG !== 'false';
+                }
+                
+                // API 활성화 상태 업데이트
+                apiConfig.useAPI = (apiConfig.provider && 
+                    (apiConfig.provider === 'local' || apiConfig.apiKey));
+            }
+            
+            // 헤더 상태 업데이트
+            if (typeof updateSystemStatus === 'function') {
+                updateSystemStatus();
+            }
+            
+            console.log('시스템 초기화 완료');
+        }
+
+        window.initSpeechRecognition = function() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (typeof recognition === 'undefined') {
+                    window.recognition = new SpeechRecognition();
+                    window.recognition.lang = 'ko-KR';
+                    window.recognition.continuous = false;
+                    window.recognition.interimResults = true;
+                }
+            }
+        }
+
+        // 모든 채팅 관련 함수들도 추가
+        window.handleQuickMenu = function(category) {
+            console.log('Quick menu clicked:', category);
+            // 구현은 나중에
+        }
+
+        window.handleQuickService = function(service) {
+            console.log('Quick service clicked:', service);
+            // 구현은 나중에
+        }
+
+        window.sendTextMessage = function() {
+            const input = document.getElementById('chatInput');
+            if (!input) return;
+            
+            const text = input.value.trim();
+            if (!text) return;
+            
+            if (typeof addChatMessage === 'function') {
+                addChatMessage(text, 'user');
+            }
+            input.value = '';
+            
+            if (typeof showTypingIndicator === 'function') {
+                showTypingIndicator();
+            }
+            
+            if (typeof generateResponse === 'function') {
+                generateResponse(text).then(response => {
+                    setTimeout(() => {
+                        if (typeof hideTypingIndicator === 'function') {
+                            hideTypingIndicator();
+                        }
+                        if (typeof addChatMessage === 'function') {
+                            addChatMessage(response, 'bot');
+                        }
+                    }, 500);
+                });
+            }
+        }
+
+        window.handleKeyPress = function(event) {
+            if (event.key === 'Enter') {
+                window.sendTextMessage();
+            }
+        }
+
+        window.toggleVoiceInput = function() {
+            console.log('Voice input toggled');
+            // 구현은 나중에
+        }
+
+        // selectSituationStep 함수 추가
+        window.selectSituationStep = function(situation) {
+            userProfile.situation = situation;
+            const nextButton = document.getElementById('nextBtn');
+            if (nextButton) {
+                nextButton.disabled = false;
+            }
+            
+            // 상황 버튼 선택 상태 업데이트
+            const buttons = document.querySelectorAll('.situation-btn');
+            buttons.forEach(btn => {
+                if (btn.dataset.situation === situation) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+        };
+
+        // showSummary 함수 추가  
+        window.showSummary = function() {
+            const summary = '설정하신 프로필 요약:\n' +
+                '나이: ' + (userProfile.age || '미설정') + '\n' +
+                '상황: ' + (userProfile.situation || '미설정') + '\n' +
+                '조건: ' + (userProfile.conditions.length > 0 ? userProfile.conditions.join(', ') : '없음');
+            
+            if (typeof addMessage === 'function') {
+                addMessage('system', summary);
+            } else if (typeof addChatMessage === 'function') {
+                addChatMessage(summary, 'bot');
+            }
+        };
+
+        window.testVoice = function() {
+            console.log('Testing voice');
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance('안녕하세요! 음성 테스트입니다.');
+                utterance.lang = 'ko-KR';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        window.toggleSpeech = function() {
+            if (typeof isSpeechEnabled !== 'undefined') {
+                isSpeechEnabled = !isSpeechEnabled;
+                const speechIcon = document.getElementById('speechIcon');
+                const speechText = document.getElementById('speechText');
+                if (speechIcon && speechText) {
+                    speechIcon.textContent = isSpeechEnabled ? '🔊' : '🔇';
+                    speechText.textContent = isSpeechEnabled ? '음성 ON' : '음성 OFF';
+                }
+            }
+        }
+        
+        console.log('모든 전역 함수들이 정의되었습니다');
+    </script>
 
     <script>
         // 전역 변수
@@ -1277,22 +1688,9 @@
             }
         };
 
-        // API 모달 관련
-        function showAPIModal() {
-            document.getElementById('apiModal').classList.add('active');
-            document.getElementById('apiProvider').value = apiConfig.provider;
-            document.getElementById('apiKey').value = apiConfig.apiKey;
-            document.getElementById('localEndpoint').value = apiConfig.localSLMEndpoint;
-            document.getElementById('hybridMode').checked = apiConfig.useHybrid;
-            document.getElementById('ragEnabled').checked = ragConfig.enabled;
-            updateAPIStatus();
-        }
+        // API 모달 관련 함수는 이미 위에서 정의됨
 
-        function closeAPIModal() {
-            document.getElementById('apiModal').classList.remove('active');
-        }
-
-        function saveAPISettings() {
+        window.saveAPISettings = function() {
             const provider = document.getElementById('apiProvider').value;
             const apiKey = document.getElementById('apiKey').value;
             const localEndpoint = document.getElementById('localEndpoint').value;
@@ -1336,7 +1734,7 @@
             console.log('• API 제공자:', provider || '없음');
         }
 
-        function updateAPIStatus() {
+        window.updateAPIStatus = function() {
             const status = document.getElementById('apiStatus');
             const provider = document.getElementById('apiProvider').value;
             const apiKeyGroup = document.getElementById('apiKeyGroup');
@@ -1366,8 +1764,9 @@
             }
         }
 
-        // 대화 컨텍스트 관리
-        const conversationContext = {
+        // 대화 컨텍스트 관리 - 이미 위에서 정의됨
+        // conversationContext를 확장
+        Object.assign(conversationContext, {
             history: [],
             lastTopic: null,
             lastMentioned: {},
@@ -1401,7 +1800,7 @@
             updateProfile: function(key, value) {
                 this.userProfile[key] = value;
             }
-        };
+        });
 
         // 방언 및 구어체 변환기 (강화 버전)
         const dialectConverter = {
